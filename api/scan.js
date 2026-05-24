@@ -25,8 +25,6 @@ export default async function handler(req, res) {
     surprise: 'open to anything — mood is neutral, just find the best match overall',
   }[mood] || 'open to anything'
 
-  // ── Single API call: read menu + score in one pass ───────────────────────
-
   const prompt = `You are a cocktail sommelier reading a menu and scoring drinks for a guest. Be fast and concise.
 
 Mood tonight: ${moodDesc}
@@ -99,21 +97,41 @@ Scoring rules:
     return res.status(422).json({ error: "No cocktails found. Make sure you're photographing a cocktail menu." })
   }
 
-  // ── Persist to Turso ─────────────────────────────────────────────────────
+  // ── Build visitId and response payload ───────────────────────────────────
 
   const visitId = crypto.randomUUID()
-  const db = getDb()
+
+  const responsePayload = {
+    visitId,
+    barName: result.barName || 'Unknown Bar',
+    profileId,
+    mood,
+    cocktails: result.cocktails,
+    unreadableCount: result.unreadableCount || 0,
+  }
+
+  // ── Respond to client immediately ────────────────────────────────────────
+  // Turso writes happen after — client is unblocked as soon as Claude finishes
+
+  res.status(200).json(responsePayload)
+
+  // ── Persist to Turso in background (batched) ─────────────────────────────
 
   try {
-    await db.execute({
-      sql: `INSERT INTO visits (id, bar_name, scanned_at, created_by) VALUES (?, ?, ?, ?)`,
-      args: [visitId, result.barName || 'Unknown Bar', Date.now(), profileId]
-    })
+    const db = getDb()
+
+    // Build all statements as a single batched transaction
+    const statements = [
+      {
+        sql: `INSERT INTO visits (id, bar_name, scanned_at, created_by) VALUES (?, ?, ?, ?)`,
+        args: [visitId, result.barName || 'Unknown Bar', Date.now(), profileId]
+      }
+    ]
 
     for (const cocktail of result.cocktails) {
       const cocktailId = crypto.randomUUID()
 
-      await db.execute({
+      statements.push({
         sql: `INSERT INTO cocktails (id, visit_id, name, description, flavor_tags, ingredients, readable)
               VALUES (?, ?, ?, ?, ?, ?, ?)`,
         args: [
@@ -123,30 +141,32 @@ Scoring rules:
         ]
       })
 
-      await db.execute({
+      statements.push({
         sql: `INSERT INTO scores (id, cocktail_id, profile_id, score, explanation, flagged_ingredients)
               VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [crypto.randomUUID(), cocktailId, profileId, cocktail.score1, cocktail.explanation1,
-          JSON.stringify(cocktail.flaggedIngredients || [])]
+        args: [
+          crypto.randomUUID(), cocktailId, profileId,
+          cocktail.score1, cocktail.explanation1,
+          JSON.stringify(cocktail.flaggedIngredients || [])
+        ]
       })
 
-      await db.execute({
+      statements.push({
         sql: `INSERT INTO scores (id, cocktail_id, profile_id, score, explanation, flagged_ingredients)
               VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [crypto.randomUUID(), cocktailId, 'partner', cocktail.score2, cocktail.explanation2,
-          JSON.stringify(cocktail.flaggedIngredients || [])]
+        args: [
+          crypto.randomUUID(), cocktailId, 'partner',
+          cocktail.score2, cocktail.explanation2,
+          JSON.stringify(cocktail.flaggedIngredients || [])
+        ]
       })
     }
-  } catch (err) {
-    console.error('DB error:', err)
-  }
 
-  return res.status(200).json({
-    visitId,
-    barName: result.barName || 'Unknown Bar',
-    profileId,
-    mood,
-    cocktails: result.cocktails,
-    unreadableCount: result.unreadableCount || 0,
-  })
+    // Execute all inserts in one batch — far fewer round trips than sequential awaits
+    await db.batch(statements, 'write')
+
+  } catch (err) {
+    console.error('DB write error (background):', err)
+    // Non-fatal — client already has their results via sessionStorage
+  }
 }
