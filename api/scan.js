@@ -1,10 +1,6 @@
 import { getDb } from './_db.js'
 import Anthropic from '@anthropic-ai/sdk'
 
-function uuid() {
-  return crypto.randomUUID()
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -31,7 +27,7 @@ export default async function handler(req, res) {
 
   // ── Single API call: read menu + score in one pass ───────────────────────
 
-  const prompt = `You are a cocktail sommelier reading a menu photo and scoring drinks for a guest.
+  const prompt = `You are a cocktail sommelier reading a menu and scoring drinks for a guest. Be fast and concise.
 
 Mood tonight: ${moodDesc}
 
@@ -40,24 +36,25 @@ ${fingerprint || 'No profile data yet — score neutrally.'}
 
 ${partnerFingerprint ? `Profile 2 (partner):\n${partnerFingerprint}` : 'Profile 2: not set — score neutrally.'}
 
-Look at the menu photo(s) and do the following in one step:
-1. Read every cocktail you can make out
-2. Score each one against both profiles
-3. Return the results
+ONLY process cocktails. Skip entirely: beer, wine, spirits lists, non-alcoholic drinks, food, and any section that is not a cocktail menu.
 
-Return ONLY a JSON object with this exact structure, no markdown, no preamble:
+For each cocktail you can read:
+1. Extract the name and translate ingredients to plain flavor language
+2. Score against both profiles
+
+Return ONLY a JSON object, no markdown, no preamble:
 {
   "barName": "Name of the bar if visible, otherwise null",
   "unreadableCount": 0,
   "cocktails": [
     {
-      "name": "Cocktail name exactly as written on menu",
-      "flavorSummary": "One sentence plain-English flavor description — no brand names, translate everything to taste",
+      "name": "Cocktail name exactly as written",
+      "flavorSummary": "One sentence flavor description, no brand names",
       "ingredients": [
-        { "name": "ingredient as written on menu", "flavorDesc": "what it tastes like in plain English" }
+        { "name": "ingredient as written", "flavorDesc": "plain English taste description" }
       ],
       "score1": "high",
-      "explanation1": "One sentence why this matches or doesn't match Profile 1 — be specific about flavors",
+      "explanation1": "One sentence why this matches or doesn't match Profile 1",
       "score2": "high",
       "explanation2": "One sentence why for Profile 2",
       "scoreUs": "high",
@@ -71,9 +68,10 @@ Scoring rules:
 - score values: "high" | "medium" | "low"
 - scoreUs is the more conservative of score1 and score2 — only "high" if both profiles would genuinely enjoy it
 - If a hard avoid ingredient is present for a profile, that profile gets "low" automatically
-- Set readable:false only if you truly cannot make out a cocktail's name or ingredients
+- Set readable:false only if you truly cannot make out a cocktail name or ingredients
 - Count unreadable cocktails in unreadableCount but do not include them in the cocktails array
-- Never use brand names in flavorSummary`
+- Never use brand names in flavorSummary
+- Keep explanations short — one sentence maximum`
 
   let result
   try {
@@ -103,7 +101,7 @@ Scoring rules:
 
   // ── Persist to Turso ─────────────────────────────────────────────────────
 
-  const visitId = uuid()
+  const visitId = crypto.randomUUID()
   const db = getDb()
 
   try {
@@ -113,7 +111,7 @@ Scoring rules:
     })
 
     for (const cocktail of result.cocktails) {
-      const cocktailId = uuid()
+      const cocktailId = crypto.randomUUID()
 
       await db.execute({
         sql: `INSERT INTO cocktails (id, visit_id, name, description, flavor_tags, ingredients, readable)
@@ -128,14 +126,14 @@ Scoring rules:
       await db.execute({
         sql: `INSERT INTO scores (id, cocktail_id, profile_id, score, explanation, flagged_ingredients)
               VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [uuid(), cocktailId, profileId, cocktail.score1, cocktail.explanation1,
+        args: [crypto.randomUUID(), cocktailId, profileId, cocktail.score1, cocktail.explanation1,
           JSON.stringify(cocktail.flaggedIngredients || [])]
       })
 
       await db.execute({
         sql: `INSERT INTO scores (id, cocktail_id, profile_id, score, explanation, flagged_ingredients)
               VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [uuid(), cocktailId, 'partner', cocktail.score2, cocktail.explanation2,
+        args: [crypto.randomUUID(), cocktailId, 'partner', cocktail.score2, cocktail.explanation2,
           JSON.stringify(cocktail.flaggedIngredients || [])]
       })
     }
