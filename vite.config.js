@@ -36,12 +36,7 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
-      },
-      workbox: {
-  navigateFallbackDenylist: [/^\/api\//],
-  skipWaiting: true,
-  clientsClaim: true,
-}
+      }
     })
   ],
   server: {
