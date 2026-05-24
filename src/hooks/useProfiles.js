@@ -21,6 +21,8 @@ const DEFAULT_PROFILES = {
   }
 }
 
+export { DEFAULT_PROFILES }
+
 export function useProfiles() {
   const [profiles, setProfilesState] = useState(() => {
     try {
