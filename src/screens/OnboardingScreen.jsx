@@ -1,7 +1,51 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useProfiles } from '../hooks/useProfiles.js'
 import styles from './OnboardingScreen.module.css'
+
+// ─── Master ingredient list for auto-suggest ─────────────────────────────────
+// Used across all custom-add fields. Sourced from cocktail_recipes.md +
+// common bar staples. Bitters, syrups, citrus excluded — those aren't
+// things people flag or love/avoid at the ingredient level.
+
+const ALL_INGREDIENTS = [
+  // Base spirits
+  'Bourbon', 'Rye', 'Scotch', 'Blended Scotch', 'Peated Scotch', 'Irish Whiskey',
+  'Gin', 'London Dry Gin', 'Old Tom Gin', 'Genever', 'Sloe Gin',
+  'Mezcal', 'Tequila', 'Blanco Tequila', 'Reposado Tequila', 'Añejo Tequila',
+  'Rum', 'Aged Rum', 'White Rum', 'Cachaça',
+  'Cognac', 'Armagnac', 'Calvados', 'Apple Brandy', 'Applejack',
+  'Vodka', 'Aquavit', 'Pisco', 'Sotol',
+  // Vermouths & fortified
+  'Sweet Vermouth', 'Dry Vermouth', 'Blanc Vermouth', 'Bianco Vermouth',
+  'Cocchi Americano', 'Lillet Blanc', 'Lillet Rouge',
+  'Amontillado Sherry', 'Oloroso Sherry', 'Manzanilla Sherry', 'Fino Sherry',
+  'Madeira', 'Port', 'Carpano Antica', 'Punt e Mes',
+  // Amaros
+  'Amaro', 'Campari', 'Aperol', 'Cynar', 'Fernet-Branca', 'Fernet',
+  'Averna', 'Meletti', 'Montenegro Amaro', 'Amaro Nonino', 'Sfumato',
+  'Zucca', 'Braulio', 'Gran Classico', 'Forthave Red',
+  'Barolo Chinato', 'Amaro Sibilla',
+  // Liqueurs
+  'Chartreuse', 'Green Chartreuse', 'Yellow Chartreuse',
+  'Maraschino', 'Luxardo Maraschino',
+  'Bénédictine', 'Cointreau', 'Curaçao', 'Dry Curaçao',
+  'Apricot Liqueur', 'Peach Liqueur', 'Cherry Liqueur',
+  'Crème de Banane', 'Banana Liqueur',
+  'Ancho Reyes', 'Ancho Verde',
+  'Suze', 'Gentian Liqueur',
+  'Swedish Punsch', 'Bonal', 'Byrrh',
+  'China-China', 'Bigallet China-China',
+  'Absinthe', 'Herbsaint',
+  'Nux Alpina', 'Walnut Liqueur',
+  'Sloe Gin', 'Elderflower Liqueur', 'St-Germain',
+  'Falernum', 'Allspice Dram',
+  'Triple Sec', 'Blue Curaçao',
+  'Chambord', 'Crème de Cassis',
+  'Frangelico', 'Amaretto',
+  'Kahlúa', 'Coffee Liqueur',
+  'Baileys', 'Irish Cream',
+]
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -9,17 +53,29 @@ const SPIRITS = [
   { id: 'bourbon', label: 'Bourbon' },
   { id: 'rye', label: 'Rye' },
   { id: 'scotch', label: 'Scotch' },
+  { id: 'irish_whiskey', label: 'Irish Whiskey' },
   { id: 'gin', label: 'Gin' },
+  { id: 'sloe_gin', label: 'Sloe Gin' },
   { id: 'mezcal', label: 'Mezcal' },
   { id: 'tequila', label: 'Tequila' },
   { id: 'rum', label: 'Rum' },
   { id: 'cognac', label: 'Cognac' },
-  { id: 'vodka', label: 'Vodka' },
-  { id: 'amaro', label: 'Amaro' },
-  { id: 'sherry', label: 'Sherry' },
-  { id: 'aquavit', label: 'Aquavit' },
+  { id: 'calvados', label: 'Calvados' },
   { id: 'apple_brandy', label: 'Apple Brandy' },
-  { id: 'irish_whiskey', label: 'Irish Whiskey' },
+  { id: 'vodka', label: 'Vodka' },
+  { id: 'aquavit', label: 'Aquavit' },
+  { id: 'amaro', label: 'Amaro' },
+  { id: 'campari', label: 'Campari' },
+  { id: 'cynar', label: 'Cynar' },
+  { id: 'fernet', label: 'Fernet' },
+  { id: 'sweet_vermouth', label: 'Sweet Vermouth' },
+  { id: 'dry_vermouth', label: 'Dry Vermouth' },
+  { id: 'sherry', label: 'Sherry' },
+  { id: 'cocchi_americano', label: 'Cocchi Americano' },
+  { id: 'absinthe', label: 'Absinthe' },
+  { id: 'chartreuse', label: 'Chartreuse' },
+  { id: 'benedictine', label: 'Bénédictine' },
+  { id: 'maraschino', label: 'Maraschino' },
 ]
 
 const FLAVORS = [
@@ -50,6 +106,10 @@ const FLAGGED = [
   { id: 'cynar', label: 'Cynar' },
   { id: 'benedictine', label: 'Bénédictine' },
   { id: 'maraschino', label: 'Maraschino' },
+  { id: 'sfumato', label: 'Sfumato' },
+  { id: 'sloe_gin', label: 'Sloe Gin' },
+  { id: 'suze', label: 'Suze' },
+  { id: 'cocchi_americano', label: 'Cocchi Americano' },
 ]
 
 const CLASSICS = [
@@ -67,6 +127,10 @@ const CLASSICS = [
   { id: 'sidecar', label: 'Sidecar', desc: 'Citrusy, cognac, elegant' },
   { id: 'spritz', label: 'Spritz / Aperol', desc: 'Light, bubbly, aperitivo' },
   { id: 'moscow_mule', label: 'Moscow Mule', desc: 'Ginger, citrus, refreshing' },
+  { id: 'sazerac', label: 'Sazerac', desc: 'Rye, anise, spirit-forward' },
+  { id: 'toronto', label: 'Toronto', desc: 'Rye, Fernet, bitter edge' },
+  { id: 'vieux_carre', label: 'Vieux Carré', desc: 'Cognac, rye, complex' },
+  { id: 'bamboo', label: 'Bamboo', desc: 'Sherry, vermouth, low ABV' },
 ]
 
 const AVOIDS = [
@@ -80,19 +144,62 @@ const AVOIDS = [
   { id: 'triple_sec', label: 'Triple Sec (cheap)' },
   { id: 'very_sweet', label: 'Very Sweet' },
   { id: 'very_sour', label: 'Very Sour' },
+  { id: 'banana', label: 'Banana' },
+  { id: 'coffee', label: 'Coffee / Espresso' },
 ]
 
-const STEPS = [
-  'name',
-  'spirits',
-  'flavors',
-  'flagged',
-  'classics',
-  'avoids',
-  'done',
-]
+const STEPS = ['name', 'spirits', 'flavors', 'flagged', 'classics', 'avoids', 'done']
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── AutoSuggest input ────────────────────────────────────────────────────────
+
+function AutoSuggestInput({ value, onChange, onAdd, placeholder, suggestions }) {
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
+  const filtered = useMemo(() => {
+    if (!value.trim() || value.length < 2) return []
+    const lower = value.toLowerCase()
+    return suggestions
+      .filter(s => s.toLowerCase().includes(lower))
+      .slice(0, 5)
+  }, [value, suggestions])
+
+  function pick(s) {
+    onChange(s)
+    setShowSuggestions(false)
+    setTimeout(() => onAdd(s), 0)
+  }
+
+  return (
+    <div className={styles.suggestWrap}>
+      <div className={styles.addChipRow}>
+        <input
+          className={styles.addInput}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => { onChange(e.target.value); setShowSuggestions(true) }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') { onAdd(value); setShowSuggestions(false) }
+            if (e.key === 'Escape') setShowSuggestions(false)
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+        />
+        <button className={styles.addBtn} onClick={() => { onAdd(value); setShowSuggestions(false) }}>+</button>
+      </div>
+      {showSuggestions && filtered.length > 0 && (
+        <div className={styles.suggestions}>
+          {filtered.map(s => (
+            <button key={s} className={styles.suggestionItem} onMouseDown={() => pick(s)}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
   const { profileId } = useParams()
@@ -102,20 +209,13 @@ export default function OnboardingScreen() {
 
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
-
-  // spirits: { id: 'love' | 'avoid' }
   const [spirits, setSpirits] = useState({})
-  // flavors: Set of loved flavor ids
   const [lovedFlavors, setLovedFlavors] = useState(new Set())
   const [avoidedFlavors, setAvoidedFlavors] = useState(new Set())
-  // flagged: Set of ingredient ids to highlight
   const [flagged, setFlagged] = useState(new Set())
-  // classics: Set of loved cocktail ids
   const [classics, setClassics] = useState(new Set())
-  // avoids: Set of hard avoid ids
   const [hardAvoids, setHardAvoids] = useState(new Set())
 
-  // Custom add fields
   const [customSpirit, setCustomSpirit] = useState('')
   const [customFlagged, setCustomFlagged] = useState('')
   const [customAvoid, setCustomAvoid] = useState('')
@@ -124,37 +224,21 @@ export default function OnboardingScreen() {
   const [extraAvoids, setExtraAvoids] = useState([])
 
   const currentStep = STEPS[step]
-  const totalSteps = STEPS.length - 1 // exclude 'done'
+  const totalSteps = STEPS.length - 1
   const progress = Math.min(step / (totalSteps - 1), 1)
 
   function scrollTop() {
-    setTimeout(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = 0
-    }, 50)
+    setTimeout(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0 }, 50)
   }
+  function goNext() { if (step < STEPS.length - 1) { setStep(s => s + 1); scrollTop() } }
+  function goBack() { if (step > 0) { setStep(s => s - 1); scrollTop() } }
 
-  function goNext() {
-    if (step < STEPS.length - 1) {
-      setStep(s => s + 1)
-      scrollTop()
-    }
-  }
-
-  function goBack() {
-    if (step > 0) {
-      setStep(s => s - 1)
-      scrollTop()
-    }
-  }
-
-  function toggleSpirit(id, state) {
+  function toggleSpirit(id) {
     setSpirits(prev => {
       const next = { ...prev }
-      if (next[id] === state) {
-        delete next[id]
-      } else {
-        next[id] = state
-      }
+      if (!next[id]) next[id] = 'love'
+      else if (next[id] === 'love') next[id] = 'avoid'
+      else delete next[id]
       return next
     })
   }
@@ -188,33 +272,21 @@ export default function OnboardingScreen() {
     }
   }
 
-  function addCustomSpirit() {
-    const val = customSpirit.trim()
-    if (!val) return
-    const id = 'custom_' + val.toLowerCase().replace(/\s+/g, '_')
-    setExtraSpirits(prev => [...prev, { id, label: val }])
-    setCustomSpirit('')
-  }
-
-  function addCustomFlagged() {
-    const val = customFlagged.trim()
-    if (!val) return
-    const id = 'custom_' + val.toLowerCase().replace(/\s+/g, '_')
-    setExtraFlagged(prev => [...prev, { id, label: val }])
-    setCustomFlagged('')
-  }
-
-  function addCustomAvoid() {
-    const val = customAvoid.trim()
-    if (!val) return
-    const id = 'custom_' + val.toLowerCase().replace(/\s+/g, '_')
-    setExtraAvoids(prev => [...prev, { id, label: val }])
-    setCustomAvoid('')
+  function addCustomEntry(val, setExtra, setValue) {
+    const trimmed = val.trim()
+    if (!trimmed) return
+    const id = 'custom_' + trimmed.toLowerCase().replace(/\s+/g, '_')
+    setExtra(prev => {
+      if (prev.find(x => x.id === id)) return prev
+      return [...prev, { id, label: trimmed }]
+    })
+    setValue('')
   }
 
   function finish() {
+    const displayName = name.trim() || (profileId === 'me' ? 'Me' : 'Partner')
     const preferences = {
-      name: name.trim() || (profileId === 'me' ? 'Me' : 'Partner'),
+      name: displayName,
       spirits,
       lovedFlavors: [...lovedFlavors],
       avoidedFlavors: [...avoidedFlavors],
@@ -223,7 +295,6 @@ export default function OnboardingScreen() {
       hardAvoids: [...hardAvoids],
     }
 
-    // Build flavor fingerprint string
     const loved = [...lovedFlavors].join(', ')
     const avoided = [...avoidedFlavors].join(', ')
     const lovedSpirits = Object.entries(spirits).filter(([,v]) => v === 'love').map(([k]) => k).join(', ')
@@ -240,7 +311,7 @@ export default function OnboardingScreen() {
     ].filter(Boolean).join('. ')
 
     updateProfile(profileId, {
-      name: preferences.name,
+      name: displayName,
       onboardingComplete: true,
       preferences,
       fingerprint,
@@ -249,11 +320,8 @@ export default function OnboardingScreen() {
     navigate('/scan')
   }
 
-  // ─── Render steps ──────────────────────────────────────────────────────────
-
   return (
     <div className={styles.screen}>
-      {/* Progress bar */}
       {currentStep !== 'done' && (
         <div className={styles.progressBar}>
           <div className={styles.progressFill} style={{ width: `${progress * 100}%` }} />
@@ -262,7 +330,7 @@ export default function OnboardingScreen() {
 
       <div className={styles.scrollArea} ref={scrollRef}>
 
-        {/* ── STEP: Name ── */}
+        {/* ── Name ── */}
         {currentStep === 'name' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
@@ -285,7 +353,7 @@ export default function OnboardingScreen() {
           </div>
         )}
 
-        {/* ── STEP: Spirits ── */}
+        {/* ── Spirits ── */}
         {currentStep === 'spirits' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
@@ -300,11 +368,7 @@ export default function OnboardingScreen() {
                   <button
                     key={s.id}
                     className={`${styles.chip} ${state === 'love' ? styles.chipLove : ''} ${state === 'avoid' ? styles.chipAvoid : ''}`}
-                    onClick={() => {
-                      if (!state) toggleSpirit(s.id, 'love')
-                      else if (state === 'love') toggleSpirit(s.id, 'avoid')
-                      else toggleSpirit(s.id, null)
-                    }}
+                    onClick={() => toggleSpirit(s.id)}
                   >
                     {state === 'love' && <span className={styles.chipIcon}>✓</span>}
                     {state === 'avoid' && <span className={styles.chipIcon}>✕</span>}
@@ -312,21 +376,18 @@ export default function OnboardingScreen() {
                   </button>
                 )
               })}
-              <div className={styles.addChipRow}>
-                <input
-                  className={styles.addInput}
-                  placeholder="Add spirit…"
-                  value={customSpirit}
-                  onChange={e => setCustomSpirit(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addCustomSpirit()}
-                />
-                <button className={styles.addBtn} onClick={addCustomSpirit}>+</button>
-              </div>
+              <AutoSuggestInput
+                value={customSpirit}
+                onChange={setCustomSpirit}
+                onAdd={val => addCustomEntry(val, setExtraSpirits, setCustomSpirit)}
+                placeholder="Add spirit…"
+                suggestions={ALL_INGREDIENTS}
+              />
             </div>
           </div>
         )}
 
-        {/* ── STEP: Flavors ── */}
+        {/* ── Flavors ── */}
         {currentStep === 'flavors' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
@@ -347,14 +408,8 @@ export default function OnboardingScreen() {
                     <div className={styles.flavorLabel}>{f.label}</div>
                     <div className={styles.flavorDesc}>{f.desc}</div>
                     <div className={styles.flavorBtns}>
-                      <button
-                        className={`${styles.flavorBtn} ${loved ? styles.flavorBtnLove : ''}`}
-                        onClick={() => toggleFlavor(f.id, 'love')}
-                      >Love</button>
-                      <button
-                        className={`${styles.flavorBtn} ${avoided ? styles.flavorBtnAvoid : ''}`}
-                        onClick={() => toggleFlavor(f.id, 'avoid')}
-                      >Avoid</button>
+                      <button className={`${styles.flavorBtn} ${loved ? styles.flavorBtnLove : ''}`} onClick={() => toggleFlavor(f.id, 'love')}>Love</button>
+                      <button className={`${styles.flavorBtn} ${avoided ? styles.flavorBtnAvoid : ''}`} onClick={() => toggleFlavor(f.id, 'avoid')}>Avoid</button>
                     </div>
                   </div>
                 )
@@ -363,13 +418,13 @@ export default function OnboardingScreen() {
           </div>
         )}
 
-        {/* ── STEP: Flagged ingredients ── */}
+        {/* ── Flagged ── */}
         {currentStep === 'flagged' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
               <p className={styles.stepEyebrow}>Step 4 of 6</p>
               <h2 className={styles.stepTitle}>Flag these</h2>
-              <p className={styles.stepSub}>These ingredients get highlighted on any menu — not a hard filter, just a heads up.</p>
+              <p className={styles.stepSub}>These get highlighted on any menu — not a hard filter, just a heads up.</p>
             </div>
             <div className={styles.chipGrid}>
               {[...FLAGGED, ...extraFlagged].map(f => (
@@ -382,21 +437,18 @@ export default function OnboardingScreen() {
                   {f.label}
                 </button>
               ))}
-              <div className={styles.addChipRow}>
-                <input
-                  className={styles.addInput}
-                  placeholder="Add ingredient…"
-                  value={customFlagged}
-                  onChange={e => setCustomFlagged(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addCustomFlagged()}
-                />
-                <button className={styles.addBtn} onClick={addCustomFlagged}>+</button>
-              </div>
+              <AutoSuggestInput
+                value={customFlagged}
+                onChange={setCustomFlagged}
+                onAdd={val => addCustomEntry(val, setExtraFlagged, setCustomFlagged)}
+                placeholder="Add ingredient…"
+                suggestions={ALL_INGREDIENTS}
+              />
             </div>
           </div>
         )}
 
-        {/* ── STEP: Classics ── */}
+        {/* ── Classics ── */}
         {currentStep === 'classics' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
@@ -420,13 +472,13 @@ export default function OnboardingScreen() {
           </div>
         )}
 
-        {/* ── STEP: Hard avoids ── */}
+        {/* ── Avoids ── */}
         {currentStep === 'avoids' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
               <p className={styles.stepEyebrow}>Step 6 of 6</p>
               <h2 className={styles.stepTitle}>Hard avoids</h2>
-              <p className={styles.stepSub}>These tank a score immediately, regardless of anything else.</p>
+              <p className={styles.stepSub}>These tank a score immediately, no matter what else is in the drink.</p>
             </div>
             <div className={styles.chipGrid}>
               {[...AVOIDS, ...extraAvoids].map(a => (
@@ -439,21 +491,18 @@ export default function OnboardingScreen() {
                   {a.label}
                 </button>
               ))}
-              <div className={styles.addChipRow}>
-                <input
-                  className={styles.addInput}
-                  placeholder="Add avoid…"
-                  value={customAvoid}
-                  onChange={e => setCustomAvoid(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addCustomAvoid()}
-                />
-                <button className={styles.addBtn} onClick={addCustomAvoid}>+</button>
-              </div>
+              <AutoSuggestInput
+                value={customAvoid}
+                onChange={setCustomAvoid}
+                onAdd={val => addCustomEntry(val, setExtraAvoids, setCustomAvoid)}
+                placeholder="Add avoid…"
+                suggestions={ALL_INGREDIENTS}
+              />
             </div>
           </div>
         )}
 
-        {/* ── STEP: Done ── */}
+        {/* ── Done ── */}
         {currentStep === 'done' && (
           <div className={styles.doneWrap}>
             <div className={styles.doneGlass}>
@@ -465,25 +514,19 @@ export default function OnboardingScreen() {
             <h2 className={styles.doneTitle}>
               {name.trim() ? `You're set, ${name.trim()}.` : "You're set."}
             </h2>
-            <p className={styles.doneSub}>
-              Your taste profile is ready. It'll get sharper every time you rate a drink.
-            </p>
-            <button className={styles.doneBtn} onClick={finish}>
-              Start scanning menus →
-            </button>
+            <p className={styles.doneSub}>Your taste profile is ready. It gets sharper every time you rate a drink.</p>
+            <button className={styles.doneBtn} onClick={finish}>Start scanning menus →</button>
           </div>
         )}
 
       </div>
 
-      {/* Bottom nav */}
       {currentStep !== 'done' && (
         <div className={styles.bottomNav}>
-          {step > 0 ? (
-            <button className={styles.backBtn} onClick={goBack}>← Back</button>
-          ) : (
-            <div />
-          )}
+          {step > 0
+            ? <button className={styles.backBtn} onClick={goBack}>← Back</button>
+            : <div />
+          }
           <button
             className={styles.nextBtn}
             onClick={currentStep === 'avoids' ? () => setStep(STEPS.indexOf('done')) : goNext}
