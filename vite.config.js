@@ -38,8 +38,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        navigateFallbackDenylist: [/^\/api\//]
-      }
+  navigateFallbackDenylist: [/^\/api\//],
+  skipWaiting: true,
+  clientsClaim: true,
+}
     })
   ],
   server: {
