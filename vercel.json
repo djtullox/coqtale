@@ -1,5 +1,9 @@
 {
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/scan", "destination": "/index.html" },
+    { "source": "/results/:path*", "destination": "/index.html" },
+    { "source": "/profile/:path*", "destination": "/index.html" },
+    { "source": "/onboarding/:path*", "destination": "/index.html" }
   ]
 }
