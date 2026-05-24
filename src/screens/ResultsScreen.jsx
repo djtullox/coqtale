@@ -1,12 +1,172 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useProfile } from '../App.jsx'
+import { useProfiles } from '../hooks/useProfiles.js'
+import styles from './ResultsScreen.module.css'
 
 export default function ResultsScreen() {
+  const { visitId } = useParams()
+  const navigate = useNavigate()
+  const { activeProfile } = useProfile()
+  const { profiles } = useProfiles()
+
+  const [visit, setVisit] = useState(null)
+  const [view, setView] = useState(null) // 'me' | 'partner' | 'us'
+  const [expandedId, setExpandedId] = useState(null)
+  const [ingredientPopup, setIngredientPopup] = useState(null) // { name, flavorDesc }
+
+  useEffect(() => {
+    const data = sessionStorage.getItem(`visit_${visitId}`)
+    if (data) {
+      const parsed = JSON.parse(data)
+      setVisit(parsed)
+      setView(parsed.profileId || 'me')
+    }
+  }, [visitId])
+
+  if (!visit) {
+    return (
+      <div className={styles.empty}>
+        <p>No results found.</p>
+        <button onClick={() => navigate('/scan')}>← Back to scan</button>
+      </div>
+    )
+  }
+
+  const meProfile = profiles.me
+  const partnerProfile = profiles.partner
+
+  const viewLabels = {
+    me: meProfile?.name || 'Me',
+    partner: partnerProfile?.name || 'Partner',
+    us: 'Us',
+  }
+
+  function getScore(cocktail) {
+    if (view === 'me') return cocktail.score1
+    if (view === 'partner') return cocktail.score2
+    return cocktail.scoreUs
+  }
+
+  function getExplanation(cocktail) {
+    if (view === 'me') return cocktail.explanation1
+    if (view === 'partner') return cocktail.explanation2
+    return cocktail.explanation1 // us view shows primary profile explanation
+  }
+
+  // Sort: high first, then medium, then low
+  const scoreOrder = { high: 0, medium: 1, low: 2 }
+  const sorted = [...(visit.cocktails || [])].sort((a, b) => {
+    return (scoreOrder[getScore(a)] ?? 1) - (scoreOrder[getScore(b)] ?? 1)
+  })
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1rem', padding: '2rem' }}>
-      <h2 style={{ color: 'var(--gold)', fontWeight: 300 }}>Results</h2>
-      <p style={{ color: 'var(--smoke)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textAlign: 'center' }}>
-        Results screen — coming next
-      </p>
+    <div className={styles.screen}>
+
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.headerTop}>
+          <button className={styles.backBtn} onClick={() => navigate('/scan')}>←</button>
+          <div className={styles.barName}>{visit.barName}</div>
+          <div style={{ width: 32 }} />
+        </div>
+
+        {/* You / Partner / Us toggle */}
+        <div className={styles.viewToggle}>
+          {['me', 'partner', 'us'].map(v => (
+            <button
+              key={v}
+              className={`${styles.viewBtn} ${view === v ? styles.viewBtnOn : ''}`}
+              onClick={() => setView(v)}
+            >
+              {viewLabels[v]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Cocktail cards */}
+      <div className={`${styles.cards} scroll-area`}>
+        {sorted.map((cocktail, i) => {
+          const score = getScore(cocktail)
+          const explanation = getExplanation(cocktail)
+          const isExpanded = expandedId === i
+          const flagged = cocktail.flaggedIngredients?.length > 0
+
+          return (
+            <div
+              key={i}
+              className={`${styles.card} ${styles[`card_${score}`]}`}
+              onClick={() => setExpandedId(isExpanded ? null : i)}
+            >
+              {/* Card header */}
+              <div className={styles.cardHeader}>
+                <div className={styles.cardLeft}>
+                  <div className={styles.cocktailName}>{cocktail.name}</div>
+                  <div className={styles.flavorSummary}>{cocktail.flavorSummary}</div>
+                </div>
+                <div className={styles.cardRight}>
+                  <span className={`${styles.scorePill} ${styles[`score_${score}`]}`}>
+                    {score?.toUpperCase()}
+                  </span>
+                  {flagged && <span className={styles.flagIcon}>⚑</span>}
+                </div>
+              </div>
+
+              {/* Explanation — always visible */}
+              <div className={styles.explanation}>{explanation}</div>
+
+              {/* Flagged ingredients alert */}
+              {flagged && (
+                <div className={styles.flaggedAlert}>
+                  ⚑ Contains: {cocktail.flaggedIngredients.join(', ')}
+                </div>
+              )}
+
+              {/* Expanded: ingredient list */}
+              {isExpanded && cocktail.ingredients?.length > 0 && (
+                <div className={styles.ingredients}>
+                  <div className={styles.ingredientsLabel}>Ingredients</div>
+                  <div className={styles.ingredientList}>
+                    {cocktail.ingredients.map((ing, j) => (
+                      <button
+                        key={j}
+                        className={styles.ingredientChip}
+                        onClick={e => {
+                          e.stopPropagation()
+                          setIngredientPopup(ing)
+                        }}
+                      >
+                        {ing.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Expand/collapse hint */}
+              <div className={styles.expandHint}>
+                {isExpanded ? '↑ less' : '↓ ingredients'}
+              </div>
+            </div>
+          )
+        })}
+
+        <div style={{ height: '2rem' }} />
+      </div>
+
+      {/* Ingredient popup */}
+      {ingredientPopup && (
+        <div className={styles.popupOverlay} onClick={() => setIngredientPopup(null)}>
+          <div className={styles.popup} onClick={e => e.stopPropagation()}>
+            <div className={styles.popupName}>{ingredientPopup.name}</div>
+            <div className={styles.popupDesc}>{ingredientPopup.flavorDesc}</div>
+            <button className={styles.popupClose} onClick={() => setIngredientPopup(null)}>
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

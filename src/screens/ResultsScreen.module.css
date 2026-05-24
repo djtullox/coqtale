@@ -1,0 +1,248 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--burgundy);
+}
+
+/* ── Header ── */
+.header {
+  flex-shrink: 0;
+  padding: calc(var(--safe-top) + 0.75rem) 1rem 0;
+  background: var(--burgundy);
+  border-bottom: 1px solid var(--burgundy-light);
+}
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.backBtn {
+  font-size: 1.2rem;
+  color: var(--smoke);
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 32px;
+}
+.barName {
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  text-align: center;
+  flex: 1;
+}
+
+/* ── View toggle ── */
+.viewToggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0.75rem;
+  background: var(--burgundy-mid);
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+.viewBtn {
+  flex: 1;
+  padding: 0.45rem 0;
+  border-radius: calc(var(--radius-md) - 3px);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--smoke);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+}
+.viewBtnOn {
+  background: var(--burgundy-light);
+  color: var(--cream);
+}
+
+/* ── Cards list ── */
+.cards {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Cocktail card ── */
+.card {
+  background: var(--burgundy-mid);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  border: 1px solid var(--burgundy-light);
+}
+.card_high  { border-left: 3px solid var(--green-signal); }
+.card_medium { border-left: 3px solid var(--amber-signal); }
+.card_low   { border-left: 3px solid var(--red-signal); }
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+.cardLeft { flex: 1; }
+.cardRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.cocktailName {
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.2;
+}
+.flavorSummary {
+  font-size: 0.82rem;
+  color: var(--smoke);
+  line-height: 1.4;
+  margin-top: 0.2rem;
+  font-family: var(--font-mono);
+}
+
+.scorePill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 400;
+  padding: 0.2rem 0.5rem;
+  border-radius: 100px;
+  letter-spacing: 0.08em;
+}
+.score_high   { background: rgba(74,144,101,0.2);  color: var(--green-signal); border: 1px solid var(--green-signal); }
+.score_medium { background: rgba(201,122,48,0.2);  color: var(--amber-signal); border: 1px solid var(--amber-signal); }
+.score_low    { background: rgba(201,64,64,0.2);   color: var(--red-signal);   border: 1px solid var(--red-signal); }
+
+.flagIcon {
+  font-size: 0.75rem;
+  color: var(--gold-dim);
+}
+
+.explanation {
+  font-size: 0.88rem;
+  color: var(--cream-dim);
+  line-height: 1.5;
+  margin-top: 0.3rem;
+}
+
+.flaggedAlert {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--gold-dim);
+  background: rgba(201,169,110,0.08);
+  border: 1px solid rgba(201,169,110,0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.6rem;
+}
+
+/* ── Ingredients ── */
+.ingredients {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--burgundy-light);
+}
+.ingredientsLabel {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--smoke);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.ingredientList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.ingredientChip {
+  padding: 0.3rem 0.7rem;
+  background: var(--burgundy-light);
+  border-radius: 100px;
+  font-size: 0.82rem;
+  color: var(--cream-dim);
+  font-family: var(--font-display);
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: underline;
+  text-decoration-color: var(--burgundy-light);
+  text-underline-offset: 2px;
+}
+.ingredientChip:active { background: var(--gold-dim); color: var(--cream); opacity: 1; }
+
+.expandHint {
+  margin-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--burgundy-light);
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
+/* ── Ingredient popup ── */
+.popupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,10,15,0.85);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding-bottom: var(--safe-bottom);
+}
+.popup {
+  background: var(--burgundy-mid);
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 1.5rem 1.5rem calc(1.5rem + var(--safe-bottom));
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.popupName {
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: var(--gold);
+}
+.popupDesc {
+  font-size: 0.95rem;
+  color: var(--cream-dim);
+  line-height: 1.6;
+}
+.popupClose {
+  margin-top: 0.5rem;
+  align-self: flex-end;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--smoke);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Empty ── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  color: var(--smoke);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
