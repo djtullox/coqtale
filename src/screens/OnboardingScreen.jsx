@@ -362,6 +362,13 @@ export default function OnboardingScreen() {
               <p className={styles.stepSub}>Tap once to love it. Tap twice to avoid it. Tap again to clear.</p>
             </div>
             <div className={styles.chipGrid}>
+              <AutoSuggestInput
+                value={customSpirit}
+                onChange={setCustomSpirit}
+                onAdd={val => addCustomEntry(val, setExtraSpirits, setCustomSpirit)}
+                placeholder="Add spirit…"
+                suggestions={ALL_INGREDIENTS}
+              />
               {[...SPIRITS, ...extraSpirits].map(s => {
                 const state = spirits[s.id]
                 return (
@@ -376,13 +383,6 @@ export default function OnboardingScreen() {
                   </button>
                 )
               })}
-              <AutoSuggestInput
-                value={customSpirit}
-                onChange={setCustomSpirit}
-                onAdd={val => addCustomEntry(val, setExtraSpirits, setCustomSpirit)}
-                placeholder="Add spirit…"
-                suggestions={ALL_INGREDIENTS}
-              />
             </div>
           </div>
         )}
@@ -427,6 +427,13 @@ export default function OnboardingScreen() {
               <p className={styles.stepSub}>These get highlighted on any menu — not a hard filter, just a heads up.</p>
             </div>
             <div className={styles.chipGrid}>
+              <AutoSuggestInput
+                value={customFlagged}
+                onChange={setCustomFlagged}
+                onAdd={val => addCustomEntry(val, setExtraFlagged, setCustomFlagged)}
+                placeholder="Add ingredient…"
+                suggestions={ALL_INGREDIENTS}
+              />
               {[...FLAGGED, ...extraFlagged].map(f => (
                 <button
                   key={f.id}
@@ -437,13 +444,6 @@ export default function OnboardingScreen() {
                   {f.label}
                 </button>
               ))}
-              <AutoSuggestInput
-                value={customFlagged}
-                onChange={setCustomFlagged}
-                onAdd={val => addCustomEntry(val, setExtraFlagged, setCustomFlagged)}
-                placeholder="Add ingredient…"
-                suggestions={ALL_INGREDIENTS}
-              />
             </div>
           </div>
         )}
@@ -481,6 +481,13 @@ export default function OnboardingScreen() {
               <p className={styles.stepSub}>These tank a score immediately, no matter what else is in the drink.</p>
             </div>
             <div className={styles.chipGrid}>
+              <AutoSuggestInput
+                value={customAvoid}
+                onChange={setCustomAvoid}
+                onAdd={val => addCustomEntry(val, setExtraAvoids, setCustomAvoid)}
+                placeholder="Add avoid…"
+                suggestions={ALL_INGREDIENTS}
+              />
               {[...AVOIDS, ...extraAvoids].map(a => (
                 <button
                   key={a.id}
@@ -491,13 +498,6 @@ export default function OnboardingScreen() {
                   {a.label}
                 </button>
               ))}
-              <AutoSuggestInput
-                value={customAvoid}
-                onChange={setCustomAvoid}
-                onAdd={val => addCustomEntry(val, setExtraAvoids, setCustomAvoid)}
-                placeholder="Add avoid…"
-                suggestions={ALL_INGREDIENTS}
-              />
             </div>
           </div>
         )}
