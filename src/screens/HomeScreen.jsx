@@ -42,9 +42,11 @@ export default function HomeScreen() {
           className={styles.profileBtn}
           onClick={() => enterAs('me')}
         >
-          <span className={styles.profileName}>{profiles.me.name}</span>
+          <span className={styles.profileName}>
+            {profiles.me.onboardingComplete ? profiles.me.name : 'Me'}
+          </span>
           {!profiles.me.onboardingComplete && (
-            <span className={styles.profileHint}>Set up your taste profile</span>
+            <span className={styles.profileHint}>Set up your taste profile →</span>
           )}
         </button>
 
@@ -52,9 +54,11 @@ export default function HomeScreen() {
           className={styles.profileBtn}
           onClick={() => enterAs('partner')}
         >
-          <span className={styles.profileName}>{profiles.partner.name}</span>
+          <span className={styles.profileName}>
+            {profiles.partner.onboardingComplete ? profiles.partner.name : 'Partner'}
+          </span>
           {!profiles.partner.onboardingComplete && (
-            <span className={styles.profileHint}>Set up your taste profile</span>
+            <span className={styles.profileHint}>Set up your taste profile →</span>
           )}
         </button>
       </div>

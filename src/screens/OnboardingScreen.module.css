@@ -1,0 +1,342 @@
+/* ── Screen shell ── */
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, #3d1020 0%, transparent 60%),
+    var(--burgundy);
+}
+
+/* ── Progress bar ── */
+.progressBar {
+  height: 2px;
+  background: var(--burgundy-light);
+  flex-shrink: 0;
+}
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.4s ease;
+}
+
+/* ── Scroll area ── */
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: calc(var(--safe-top) + 1.5rem) 1.5rem 2rem;
+}
+
+/* ── Step wrapper ── */
+.stepWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+/* ── Step header ── */
+.stepHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.stepEyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.stepTitle {
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--cream);
+  line-height: 1.2;
+}
+.stepSub {
+  font-size: 0.85rem;
+  color: var(--smoke);
+  line-height: 1.5;
+}
+.legendLove { color: var(--green-signal); }
+.legendAvoid { color: var(--red-signal); }
+
+/* ── Name input ── */
+.nameInputWrap {
+  margin-top: 0.5rem;
+}
+.nameInput {
+  width: 100%;
+  font-size: 2rem;
+  font-weight: 300;
+  font-family: var(--font-display);
+  color: var(--cream);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.5rem 0;
+  caret-color: var(--gold);
+}
+.nameInput::placeholder {
+  color: var(--burgundy-light);
+}
+.nameUnderline {
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold-dim), transparent);
+}
+
+/* ── Chip grid ── */
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--burgundy-mid);
+  border: 1px solid var(--burgundy-light);
+  border-radius: 100px;
+  font-size: 0.85rem;
+  color: var(--cream-dim);
+  font-family: var(--font-display);
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.chip:active { opacity: 0.7; }
+.chipLove {
+  background: rgba(74, 144, 101, 0.2);
+  border-color: var(--green-signal);
+  color: var(--cream);
+}
+.chipAvoid {
+  background: rgba(201, 64, 64, 0.2);
+  border-color: var(--red-signal);
+  color: var(--cream);
+}
+.chipFlag {
+  background: rgba(201, 169, 110, 0.15);
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+.chipIcon {
+  font-size: 0.7rem;
+  opacity: 0.9;
+}
+
+/* ── Add custom row ── */
+.addChipRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.4rem;
+}
+.addInput {
+  flex: 1;
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+  color: var(--cream);
+  background: var(--burgundy-mid);
+  border: 1px dashed var(--burgundy-light);
+  border-radius: 100px;
+  padding: 0.5rem 0.9rem;
+  outline: none;
+}
+.addInput::placeholder { color: var(--smoke); }
+.addInput:focus { border-color: var(--gold-dim); }
+.addBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--burgundy-light);
+  color: var(--gold);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* ── Flavor grid ── */
+.flavorGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.flavorCard {
+  background: var(--burgundy-mid);
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.flavorLabel {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--cream);
+}
+.flavorDesc {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--smoke);
+  line-height: 1.3;
+  flex: 1;
+}
+.flavorBtns {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.flavorBtn {
+  flex: 1;
+  padding: 0.3rem 0;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  background: var(--burgundy-light);
+  color: var(--smoke);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.flavorBtnLove {
+  background: rgba(74, 144, 101, 0.25);
+  border-color: var(--green-signal);
+  color: var(--green-signal);
+}
+.flavorBtnAvoid {
+  background: rgba(201, 64, 64, 0.2);
+  border-color: var(--red-signal);
+  color: var(--red-signal);
+}
+
+/* ── Classic cocktail grid ── */
+.classicGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.classicCard {
+  position: relative;
+  background: var(--burgundy-mid);
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.classicCardOn {
+  background: rgba(201, 169, 110, 0.1);
+  border-color: var(--gold-dim);
+}
+.classicName {
+  font-size: 1rem;
+  color: var(--cream);
+  font-weight: 400;
+}
+.classicDesc {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--smoke);
+  margin-top: 0.2rem;
+}
+.classicCheck {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+/* ── Bottom nav ── */
+.bottomNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem calc(var(--safe-bottom) + 0.75rem);
+  background: var(--burgundy-mid);
+  border-top: 1px solid var(--burgundy-light);
+  flex-shrink: 0;
+}
+.backBtn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--smoke);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 0.5rem 0;
+}
+.nextBtn {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  background: rgba(201, 169, 110, 0.1);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nextBtn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.nextBtn:not(:disabled):active {
+  background: rgba(201, 169, 110, 0.2);
+  opacity: 1;
+}
+
+/* ── Done screen ── */
+.doneWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  gap: 1.2rem;
+  text-align: center;
+  padding: 2rem;
+}
+.doneGlass {
+  width: 52px;
+  height: 68px;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 0 20px rgba(201, 169, 110, 0.4));
+}
+.doneTitle {
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--gold);
+  line-height: 1.2;
+}
+.doneSub {
+  font-size: 0.9rem;
+  color: var(--smoke);
+  max-width: 280px;
+  line-height: 1.6;
+}
+.doneBtn {
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--gold);
+  background: rgba(201, 169, 110, 0.1);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 2rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
