@@ -1,0 +1,118 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--burgundy);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Header ── */
+.header {
+  flex-shrink: 0;
+  padding: calc(var(--safe-top) + 1.5rem) 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--burgundy-light);
+}
+
+.name {
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
+
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--smoke);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
+/* ── Sections ── */
+.section {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--burgundy-light);
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--gold-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.fingerprint {
+  font-size: 0.9rem;
+  color: var(--cream-dim);
+  line-height: 1.7;
+}
+
+.empty {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--smoke);
+}
+
+/* ── Visit list ── */
+.visitList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.visitCard {
+  width: 100%;
+  text-align: left;
+  background: var(--burgundy-mid);
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.visitCard:active {
+  border-color: var(--gold-dim);
+}
+
+.visitCardActive {
+  border-color: var(--gold-dim);
+  box-shadow: 0 0 12px rgba(201, 169, 110, 0.12);
+}
+
+.visitTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.visitBar {
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--cream);
+}
+
+.activeBadge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: 100px;
+  padding: 0.15rem 0.5rem;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.visitMeta {
+  display: flex;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--smoke);
+}
