@@ -20,7 +20,7 @@ export default function ResultsScreen() {
     async function loadVisit() {
       // Try Turso first
       try {
-        const res = await fetch(`/api/visit/${visitId}`)
+        const res = await fetch(`/api/visit/${visitId}`, { cache: 'no-store' })
         if (res.ok) {
           const data = await res.json()
           setVisit(data)
