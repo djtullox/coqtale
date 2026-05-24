@@ -105,7 +105,8 @@ export default function ScanScreen() {
 
   async function translate() {
     if (!photos.length) return
-    const profile = getProfile(activeProfile)
+    const resolvedProfile = activeProfile || "me"
+    const profile = getProfile(resolvedProfile)
     if (!profile) return
 
     cancelRef.current = false
@@ -120,9 +121,9 @@ export default function ScanScreen() {
         body: JSON.stringify({
           photos: photos.map(p => ({ base64: p.base64, mediaType: p.mediaType })),
           mood,
-          profileId: activeProfile,
+          profileId: resolvedProfile,
           fingerprint: profile.fingerprint,
-          partnerFingerprint: getProfile(activeProfile === 'me' ? 'partner' : 'me')?.fingerprint || null,
+          partnerFingerprint: getProfile(resolvedProfile === 'me' ? 'partner' : 'me')?.fingerprint || null,
         }),
       })
 
