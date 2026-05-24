@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfile } from '../App.jsx'
 import { useProfiles } from '../hooks/useProfiles.js'
@@ -16,12 +16,27 @@ const STATUS_MESSAGES = [
   'Almost there…',
 ]
 
-function fileToBase64(file) {
+// Compress to max 1600px, JPEG 0.82 — keeps base64 well under Vercel's 4.5MB limit
+function compressAndBase64(file) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result.split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      const MAX = 1600
+      let { width, height } = img
+      if (width > MAX || height > MAX) {
+        if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+        else { width = Math.round(width * MAX / height); height = MAX }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      resolve(canvas.toDataURL('image/jpeg', 0.82).split(',')[1])
+    }
+    img.onerror = reject
+    img.src = objectUrl
   })
 }
 
@@ -31,8 +46,8 @@ export default function ScanScreen() {
   const { getProfile } = useProfiles()
 
   const [mood, setMood] = useState('boozy')
-  const [photos, setPhotos] = useState([])  // { file, previewUrl, base64 }
-  const [status, setStatus] = useState('idle') // idle | loading | error
+  const [photos, setPhotos] = useState([])
+  const [status, setStatus] = useState('idle')
   const [statusMsg, setStatusMsg] = useState(0)
   const [error, setError] = useState(null)
   const [canCancel, setCanCancel] = useState(false)
@@ -48,12 +63,11 @@ export default function ScanScreen() {
     const newPhotos = await Promise.all(files.map(async file => ({
       file,
       previewUrl: URL.createObjectURL(file),
-      base64: await fileToBase64(file),
-      mediaType: file.type || 'image/jpeg',
+      base64: await compressAndBase64(file),
+      mediaType: 'image/jpeg',
     })))
 
     setPhotos(prev => [...prev, ...newPhotos])
-    // Reset input so same file can be re-selected
     e.target.value = ''
   }
 
@@ -73,7 +87,6 @@ export default function ScanScreen() {
       i = Math.min(i + 1, STATUS_MESSAGES.length - 1)
       setStatusMsg(i)
     }, 5000)
-    // Enable cancel after 15 seconds
     setTimeout(() => setCanCancel(true), 15000)
   }
 
@@ -92,7 +105,6 @@ export default function ScanScreen() {
 
   async function translate() {
     if (!photos.length) return
-
     const profile = getProfile(activeProfile)
     if (!profile) return
 
@@ -115,7 +127,6 @@ export default function ScanScreen() {
       })
 
       if (cancelRef.current) return
-
       stopStatusCycle()
 
       if (!response.ok) {
@@ -124,12 +135,9 @@ export default function ScanScreen() {
       }
 
       const data = await response.json()
-
       if (cancelRef.current) return
 
-      // Store visit data in sessionStorage for results screen
       sessionStorage.setItem(`visit_${data.visitId}`, JSON.stringify(data))
-
       navigate(`/results/${data.visitId}`)
     } catch (err) {
       if (cancelRef.current) return
@@ -143,8 +151,6 @@ export default function ScanScreen() {
 
   return (
     <div className={styles.screen}>
-
-      {/* Mood selector */}
       <div className={styles.moodRow}>
         {MOODS.map(m => (
           <button
@@ -157,11 +163,8 @@ export default function ScanScreen() {
         ))}
       </div>
 
-      {/* Main content */}
       <div className={styles.main}>
-
         {status === 'loading' ? (
-          /* Loading state */
           <div className={styles.loadingWrap}>
             <div className={styles.spinner} />
             <p className={styles.loadingMsg}>{STATUS_MESSAGES[statusMsg]}</p>
@@ -171,7 +174,6 @@ export default function ScanScreen() {
           </div>
         ) : (
           <>
-            {/* Photo previews */}
             {hasPhotos && (
               <div className={styles.previews}>
                 {photos.map((p, i) => (
@@ -184,7 +186,6 @@ export default function ScanScreen() {
               </div>
             )}
 
-            {/* Error */}
             {status === 'error' && (
               <div className={styles.errorCard}>
                 <p className={styles.errorText}>{error}</p>
@@ -192,12 +193,9 @@ export default function ScanScreen() {
               </div>
             )}
 
-            {/* Empty state */}
             {!hasPhotos && status !== 'error' && (
               <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>
-                  <CameraIcon />
-                </div>
+                <div className={styles.emptyIcon}><CameraIcon /></div>
                 <p className={styles.emptyText}>Take a photo of a cocktail menu</p>
                 <p className={styles.emptyHint}>Add more photos for multi-page menus</p>
               </div>
@@ -206,10 +204,8 @@ export default function ScanScreen() {
         )}
       </div>
 
-      {/* Bottom actions */}
       {status !== 'loading' && (
         <div className={styles.actions}>
-          {/* Hidden file input — capture=environment opens rear camera on iOS */}
           <input
             ref={fileInputRef}
             type="file"
@@ -219,15 +215,10 @@ export default function ScanScreen() {
             onChange={handleFileChange}
             style={{ display: 'none' }}
           />
-
-          <button
-            className={styles.scanBtn}
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <button className={styles.scanBtn} onClick={() => fileInputRef.current?.click()}>
             <CameraIcon size={20} />
             {hasPhotos ? 'Add Another Page' : 'Scan Menu'}
           </button>
-
           {hasPhotos && (
             <button className={styles.translateBtn} onClick={translate}>
               Translate Menu →
