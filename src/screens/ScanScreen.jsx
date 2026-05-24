@@ -51,6 +51,7 @@ export default function ScanScreen() {
   const [statusMsg, setStatusMsg] = useState(0)
   const [error, setError] = useState(null)
   const [canCancel, setCanCancel] = useState(false)
+  const [debug, setDebug] = useState('')
 
   const fileInputRef = useRef(null)
   const cancelRef = useRef(false)
@@ -109,6 +110,7 @@ export default function ScanScreen() {
     const profile = getProfile(resolvedProfile)
     if (!profile) return
 
+    setDebug('translate called, photos:' + photos.length + ' profile:' + resolvedProfile)
     cancelRef.current = false
     setStatus('loading')
     setError(null)
@@ -194,6 +196,7 @@ export default function ScanScreen() {
               </div>
             )}
 
+            {debug ? <p style={{color:'yellow',fontFamily:'monospace',fontSize:'0.7rem',padding:'0.5rem',wordBreak:'break-all'}}>{debug}</p> : null}
             {!hasPhotos && status !== 'error' && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}><CameraIcon /></div>
