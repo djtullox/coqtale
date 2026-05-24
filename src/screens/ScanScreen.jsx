@@ -214,7 +214,6 @@ export default function ScanScreen() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             multiple
             onChange={handleFileChange}
             style={{ display: 'none' }}
