@@ -5,11 +5,11 @@
 export const DEV_SEED_PROFILES = {
   me: {
     id: 'me',
-    name: 'Nick',
+    name: 'David',
     onboardingComplete: true,
     ratingCount: 0,
     preferences: {
-      name: 'Nick',
+      name: 'David',
       spirits: {
         bourbon: 'love', rye: 'love', mezcal: 'love', gin: 'love',
         amaro: 'love', scotch: 'love', cognac: 'love', apple_brandy: 'love',
@@ -28,11 +28,11 @@ export const DEV_SEED_PROFILES = {
   },
   partner: {
     id: 'partner',
-    name: 'Partner',
+    name: 'Lauren',
     onboardingComplete: true,
     ratingCount: 0,
     preferences: {
-      name: 'Partner',
+      name: 'Lauren',
       spirits: {
         gin: 'love', tequila: 'love', mezcal: 'love', bourbon: 'love',
         sweet_vermouth: 'love', campari: 'love', vodka: 'love',
