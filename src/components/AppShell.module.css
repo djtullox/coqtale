@@ -32,8 +32,41 @@
   font-family: var(--font-mono);
   letter-spacing: 0.05em;
   transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .navItemActive {
   color: var(--gold);
+}
+
+.navItemTonight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.4rem 1.5rem;
+  color: var(--gold);
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  background: rgba(201, 169, 110, 0.08);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.navItemTonight::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 10px rgba(201, 169, 110, 0.2);
+}
+
+.navItemTonight:active {
+  background: rgba(201, 169, 110, 0.15);
 }
