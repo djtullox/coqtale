@@ -11,18 +11,48 @@ export default function ResultsScreen() {
   const { profiles } = useProfiles()
 
   const [visit, setVisit] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [view, setView] = useState(null) // 'me' | 'partner' | 'us'
   const [expandedId, setExpandedId] = useState(null)
   const [ingredientPopup, setIngredientPopup] = useState(null) // { name, flavorDesc }
 
   useEffect(() => {
-    const data = sessionStorage.getItem(`visit_${visitId}`)
-    if (data) {
-      const parsed = JSON.parse(data)
-      setVisit(parsed)
-      setView(parsed.profileId || 'me')
+    async function loadVisit() {
+      // Try Turso first
+      try {
+        const res = await fetch(`/api/visit/${visitId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setVisit(data)
+          setView(data.createdBy || 'me')
+          setLoading(false)
+          return
+        }
+      } catch (err) {
+        console.warn('Turso fetch failed, falling back to sessionStorage', err)
+      }
+
+      // Fall back to sessionStorage
+      const cached = sessionStorage.getItem(`visit_${visitId}`)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        setVisit(parsed)
+        setView(parsed.profileId || 'me')
+      }
+
+      setLoading(false)
     }
+
+    loadVisit()
   }, [visitId])
+
+  if (loading) {
+    return (
+      <div className={styles.empty}>
+        <p>Loading results…</p>
+      </div>
+    )
+  }
 
   if (!visit) {
     return (
