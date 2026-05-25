@@ -3,189 +3,152 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useProfiles } from '../hooks/useProfiles.js'
 import styles from './OnboardingScreen.module.css'
 
-// ─── Master ingredient list for auto-suggest ─────────────────────────────────
-// Used across all custom-add fields. Sourced from cocktail_recipes.md +
-// common bar staples. Bitters, syrups, citrus excluded — those aren't
-// things people flag or love/avoid at the ingredient level.
+// ─── Suggest list: most commonly encountered ingredients on craft bar menus ──
+// Used for autocomplete in manual-add fields. Not exhaustive — just the
+// ingredients a guest is most likely to encounter at a serious cocktail bar.
 
-const ALL_INGREDIENTS = [
+const SUGGEST_INGREDIENTS = [
   // Base spirits
-  'Bourbon', 'Rye', 'Scotch', 'Blended Scotch', 'Peated Scotch', 'Irish Whiskey',
-  'Gin', 'London Dry Gin', 'Old Tom Gin', 'Genever', 'Sloe Gin',
-  'Mezcal', 'Tequila', 'Blanco Tequila', 'Reposado Tequila', 'Añejo Tequila',
-  'Rum', 'Aged Rum', 'White Rum', 'Cachaça',
-  'Cognac', 'Armagnac', 'Calvados', 'Apple Brandy', 'Applejack',
-  'Vodka', 'Aquavit', 'Pisco', 'Sotol',
+  'Bourbon', 'Rye', 'Scotch', 'Irish Whiskey', 'Gin', 'Mezcal', 'Tequila',
+  'Rum', 'Aged Rum', 'Cognac', 'Calvados', 'Apple Brandy', 'Vodka', 'Aquavit',
   // Vermouths & fortified
-  'Sweet Vermouth', 'Dry Vermouth', 'Blanc Vermouth', 'Bianco Vermouth',
-  'Cocchi Americano', 'Lillet Blanc', 'Lillet Rouge',
-  'Amontillado Sherry', 'Oloroso Sherry', 'Manzanilla Sherry', 'Fino Sherry',
-  'Madeira', 'Port', 'Carpano Antica', 'Punt e Mes',
-  // Amaros
-  'Amaro', 'Campari', 'Aperol', 'Cynar', 'Fernet-Branca', 'Fernet',
-  'Averna', 'Meletti', 'Montenegro Amaro', 'Amaro Nonino', 'Sfumato',
-  'Zucca', 'Braulio', 'Gran Classico', 'Forthave Red',
-  'Barolo Chinato', 'Amaro Sibilla',
+  'Sweet Vermouth', 'Dry Vermouth', 'Blanc Vermouth',
+  'Amontillado Sherry', 'Oloroso Sherry', 'Fino Sherry',
+  'Cocchi Americano', 'Lillet Blanc',
+  // Amaros & bitters-forward
+  'Amaro', 'Campari', 'Aperol', 'Cynar', 'Fernet', 'Fernet-Branca',
+  'Averna', 'Montenegro Amaro', 'Amaro Nonino', 'Sfumato',
   // Liqueurs
   'Chartreuse', 'Green Chartreuse', 'Yellow Chartreuse',
-  'Maraschino', 'Luxardo Maraschino',
-  'Bénédictine', 'Cointreau', 'Curaçao', 'Dry Curaçao',
-  'Apricot Liqueur', 'Peach Liqueur', 'Cherry Liqueur',
-  'Crème de Banane', 'Banana Liqueur',
-  'Ancho Reyes', 'Ancho Verde',
-  'Suze', 'Gentian Liqueur',
-  'Swedish Punsch', 'Bonal', 'Byrrh',
-  'China-China', 'Bigallet China-China',
-  'Absinthe', 'Herbsaint',
-  'Nux Alpina', 'Walnut Liqueur',
-  'Sloe Gin', 'Elderflower Liqueur', 'St-Germain',
-  'Falernum', 'Allspice Dram',
-  'Triple Sec', 'Blue Curaçao',
-  'Chambord', 'Crème de Cassis',
-  'Frangelico', 'Amaretto',
-  'Kahlúa', 'Coffee Liqueur',
-  'Baileys', 'Irish Cream',
+  'Maraschino', 'Bénédictine', 'Cointreau', 'Dry Curaçao',
+  'Elderflower Liqueur', 'St-Germain', 'Suze', 'Absinthe',
+  'Ancho Reyes', 'Falernum', 'Allspice Dram',
+  'Sloe Gin', 'Apricot Liqueur', 'Peach Liqueur',
+  // Texture / format
+  'Egg White', 'Cream', 'Coconut Cream', 'Coconut',
+  // Flavor descriptors (plain language avoids)
+  'Overwhelmingly Sweet', 'Overwhelmingly Sour', 'Anise', 'Licorice',
 ]
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
-const SPIRITS = [
-  { id: 'bourbon', label: 'Bourbon' },
-  { id: 'rye', label: 'Rye' },
-  { id: 'scotch', label: 'Scotch' },
-  { id: 'irish_whiskey', label: 'Irish Whiskey' },
-  { id: 'gin', label: 'Gin' },
-  { id: 'sloe_gin', label: 'Sloe Gin' },
-  { id: 'mezcal', label: 'Mezcal' },
-  { id: 'tequila', label: 'Tequila' },
-  { id: 'rum', label: 'Rum' },
-  { id: 'cognac', label: 'Cognac' },
-  { id: 'calvados', label: 'Calvados' },
-  { id: 'apple_brandy', label: 'Apple Brandy' },
-  { id: 'vodka', label: 'Vodka' },
-  { id: 'aquavit', label: 'Aquavit' },
-  { id: 'amaro', label: 'Amaro' },
-  { id: 'campari', label: 'Campari' },
-  { id: 'cynar', label: 'Cynar' },
-  { id: 'fernet', label: 'Fernet' },
-  { id: 'sweet_vermouth', label: 'Sweet Vermouth' },
-  { id: 'dry_vermouth', label: 'Dry Vermouth' },
-  { id: 'sherry', label: 'Sherry' },
-  { id: 'cocchi_americano', label: 'Cocchi Americano' },
-  { id: 'absinthe', label: 'Absinthe' },
-  { id: 'chartreuse', label: 'Chartreuse' },
-  { id: 'benedictine', label: 'Bénédictine' },
-  { id: 'maraschino', label: 'Maraschino' },
-]
-
-const FLAVORS = [
-  { id: 'bitter', label: 'Bitter', desc: 'Campari, amaro, Cynar' },
-  { id: 'smoky', label: 'Smoky', desc: 'Mezcal, Laphroaig, char' },
-  { id: 'herbal', label: 'Herbal', desc: 'Chartreuse, vermouth, gin' },
-  { id: 'citrus', label: 'Citrus', desc: 'Lemon, lime, orange peel' },
-  { id: 'sweet', label: 'Sweet', desc: 'Liqueurs, syrups, fruit' },
-  { id: 'sour', label: 'Sour', desc: 'Tart, acidic, bright' },
-  { id: 'spicy', label: 'Spicy', desc: 'Ginger, chili, pepper' },
-  { id: 'floral', label: 'Floral', desc: 'Elderflower, violet, rose' },
-  { id: 'nutty', label: 'Nutty', desc: 'Walnut, almond, orgeat' },
-  { id: 'fruity', label: 'Fruity', desc: 'Berry, tropical, stone fruit' },
-  { id: 'rich', label: 'Rich', desc: 'Full-bodied, dense, warming' },
-  { id: 'dry', label: 'Dry', desc: 'Bone dry, austere, clean' },
+const CLASSICS = [
+  { id: 'negroni',        label: 'Negroni',        desc: 'Bitter, herbal, spirit-forward' },
+  { id: 'old_fashioned',  label: 'Old Fashioned',  desc: 'Boozy, sweet, spirit-forward' },
+  { id: 'manhattan',      label: 'Manhattan',      desc: 'Rich, warming, stirred' },
+  { id: 'daiquiri',       label: 'Daiquiri',       desc: 'Tart, clean, citrus-forward' },
+  { id: 'margarita',      label: 'Margarita',      desc: 'Bright, citrusy, balanced' },
+  { id: 'martini',        label: 'Martini',        desc: 'Dry, clean, spirit-forward' },
+  { id: 'whiskey_sour',   label: 'Whiskey Sour',   desc: 'Tart, balanced, approachable' },
+  { id: 'penicillin',     label: 'Penicillin',     desc: 'Smoky, ginger, citrus' },
+  { id: 'paper_plane',    label: 'Paper Plane',    desc: 'Equal parts, bitter, bright' },
+  { id: 'last_word',      label: 'Last Word',      desc: 'Herbal, tart, equal parts' },
+  { id: 'boulevardier',   label: 'Boulevardier',   desc: 'Bitter, rich, whiskey Negroni' },
+  { id: 'sidecar',        label: 'Sidecar',        desc: 'Citrusy, cognac, elegant' },
+  { id: 'moscow_mule',    label: 'Moscow Mule',    desc: 'Ginger, citrus, refreshing' },
+  { id: 'sazerac',        label: 'Sazerac',        desc: 'Rye, anise, spirit-forward' },
+  { id: 'toronto',        label: 'Toronto',        desc: 'Rye, Fernet, bitter edge' },
+  { id: 'vieux_carre',    label: 'Vieux Carré',    desc: 'Cognac, rye, complex' },
+  { id: 'bamboo',         label: 'Bamboo',         desc: 'Sherry, vermouth, low ABV' },
+  { id: 'spritz',         label: 'Spritz / Aperol',desc: 'Light, bubbly, aperitivo' },
 ]
 
 const FLAGGED = [
-  { id: 'amaro', label: 'Amaro' },
-  { id: 'mezcal', label: 'Mezcal' },
-  { id: 'vermouth', label: 'Vermouth' },
-  { id: 'sherry', label: 'Sherry' },
-  { id: 'chartreuse', label: 'Chartreuse' },
-  { id: 'campari', label: 'Campari' },
-  { id: 'fernet', label: 'Fernet' },
-  { id: 'absinthe', label: 'Absinthe' },
-  { id: 'aquavit', label: 'Aquavit' },
-  { id: 'cynar', label: 'Cynar' },
-  { id: 'benedictine', label: 'Bénédictine' },
-  { id: 'maraschino', label: 'Maraschino' },
-  { id: 'sfumato', label: 'Sfumato' },
-  { id: 'sloe_gin', label: 'Sloe Gin' },
-  { id: 'suze', label: 'Suze' },
+  { id: 'amaro',            label: 'Amaro' },
+  { id: 'chartreuse',       label: 'Chartreuse' },
+  { id: 'mezcal',           label: 'Mezcal' },
+  { id: 'vermouth',         label: 'Vermouth' },
+  { id: 'sherry',           label: 'Sherry' },
+  { id: 'campari',          label: 'Campari' },
+  { id: 'fernet',           label: 'Fernet' },
+  { id: 'absinthe',         label: 'Absinthe' },
+  { id: 'aquavit',          label: 'Aquavit' },
+  { id: 'cynar',            label: 'Cynar' },
+  { id: 'aperol',           label: 'Aperol' },
+  { id: 'benedictine',      label: 'Bénédictine' },
+  { id: 'maraschino',       label: 'Maraschino' },
+  { id: 'sfumato',          label: 'Sfumato' },
+  { id: 'sloe_gin',         label: 'Sloe Gin' },
+  { id: 'suze',             label: 'Suze' },
   { id: 'cocchi_americano', label: 'Cocchi Americano' },
-]
-
-const CLASSICS = [
-  { id: 'negroni', label: 'Negroni', desc: 'Bitter, herbal, spirit-forward' },
-  { id: 'old_fashioned', label: 'Old Fashioned', desc: 'Boozy, sweet, spirit-forward' },
-  { id: 'manhattan', label: 'Manhattan', desc: 'Rich, warming, stirred' },
-  { id: 'daiquiri', label: 'Daiquiri', desc: 'Tart, clean, citrus-forward' },
-  { id: 'margarita', label: 'Margarita', desc: 'Bright, citrusy, balanced' },
-  { id: 'martini', label: 'Martini', desc: 'Dry, clean, spirit-forward' },
-  { id: 'whiskey_sour', label: 'Whiskey Sour', desc: 'Tart, balanced, approachable' },
-  { id: 'penicillin', label: 'Penicillin', desc: 'Smoky, ginger, citrus' },
-  { id: 'paper_plane', label: 'Paper Plane', desc: 'Equal parts, bitter, bright' },
-  { id: 'last_word', label: 'Last Word', desc: 'Herbal, tart, equal parts' },
-  { id: 'boulevardier', label: 'Boulevardier', desc: 'Bitter, rich, whiskey Negroni' },
-  { id: 'sidecar', label: 'Sidecar', desc: 'Citrusy, cognac, elegant' },
-  { id: 'spritz', label: 'Spritz / Aperol', desc: 'Light, bubbly, aperitivo' },
-  { id: 'moscow_mule', label: 'Moscow Mule', desc: 'Ginger, citrus, refreshing' },
-  { id: 'sazerac', label: 'Sazerac', desc: 'Rye, anise, spirit-forward' },
-  { id: 'toronto', label: 'Toronto', desc: 'Rye, Fernet, bitter edge' },
-  { id: 'vieux_carre', label: 'Vieux Carré', desc: 'Cognac, rye, complex' },
-  { id: 'bamboo', label: 'Bamboo', desc: 'Sherry, vermouth, low ABV' },
+  { id: 'elderflower',      label: 'Elderflower' },
+  { id: 'falernum',         label: 'Falernum' },
 ]
 
 const AVOIDS = [
-  { id: 'cream', label: 'Cream' },
-  { id: 'egg_white', label: 'Egg White' },
-  { id: 'coconut', label: 'Coconut' },
-  { id: 'anise', label: 'Anise / Licorice' },
-  { id: 'falernum', label: 'Falernum' },
-  { id: 'blue_curacao', label: 'Blue Curaçao' },
-  { id: 'grenadine', label: 'Grenadine' },
-  { id: 'triple_sec', label: 'Triple Sec (cheap)' },
-  { id: 'very_sweet', label: 'Very Sweet' },
-  { id: 'very_sour', label: 'Very Sour' },
-  { id: 'banana', label: 'Banana' },
-  { id: 'coffee', label: 'Coffee / Espresso' },
+  { id: 'cream',                label: 'Cream' },
+  { id: 'egg_white',            label: 'Egg White' },
+  { id: 'coconut',              label: 'Coconut' },
+  { id: 'anise',                label: 'Anise / Licorice' },
+  { id: 'banana',               label: 'Banana' },
+  { id: 'coffee',               label: 'Coffee / Espresso' },
+  { id: 'blue_curacao',         label: 'Blue Curaçao' },
+  { id: 'grenadine',            label: 'Grenadine' },
+  { id: 'overwhelmingly_sweet', label: 'Overwhelmingly Sweet' },
+  { id: 'overwhelmingly_sour',  label: 'Overwhelmingly Sour' },
 ]
 
-const STEPS = ['name', 'spirits', 'flavors', 'flagged', 'classics', 'avoids', 'done']
+const STEPS = ['name', 'classics', 'flagged', 'avoids', 'done']
+
+// ─── Validation ───────────────────────────────────────────────────────────────
+
+function validateEntry(val, existingIds) {
+  const trimmed = val.trim()
+  if (trimmed.length < 2) return 'Too short — at least 2 characters.'
+  if (trimmed.length > 40) return 'Too long — keep it under 40 characters.'
+  if (/[^a-zA-Z0-9\s\-'éàüöäñçèêëîïôùûüÿæœ\/]/.test(trimmed)) return 'Letters, hyphens, and apostrophes only.'
+  const id = 'custom_' + trimmed.toLowerCase().replace(/\s+/g, '_')
+  if (existingIds.has(id)) return 'Already in the list.'
+  return null
+}
 
 // ─── AutoSuggest input ────────────────────────────────────────────────────────
 
-function AutoSuggestInput({ value, onChange, onAdd, placeholder, suggestions }) {
+function AutoSuggestInput({ value, onChange, onAdd, placeholder, existingIds, error, onError }) {
   const [showSuggestions, setShowSuggestions] = useState(false)
 
   const filtered = useMemo(() => {
     if (!value.trim() || value.length < 2) return []
     const lower = value.toLowerCase()
-    return suggestions
+    return SUGGEST_INGREDIENTS
       .filter(s => s.toLowerCase().includes(lower))
       .slice(0, 5)
-  }, [value, suggestions])
+  }, [value])
+
+  function attempt(val) {
+    const err = validateEntry(val, existingIds)
+    if (err) { onError(err); return }
+    onError(null)
+    onAdd(val.trim())
+  }
 
   function pick(s) {
     onChange(s)
     setShowSuggestions(false)
-    setTimeout(() => onAdd(s), 0)
+    const err = validateEntry(s, existingIds)
+    if (err) { onError(err); return }
+    onError(null)
+    onAdd(s.trim())
   }
 
   return (
     <div className={styles.suggestWrap}>
       <div className={styles.addChipRow}>
         <input
-          className={styles.addInput}
+          className={`${styles.addInput} ${error ? styles.addInputError : ''}`}
           placeholder={placeholder}
           value={value}
-          onChange={e => { onChange(e.target.value); setShowSuggestions(true) }}
+          onChange={e => { onChange(e.target.value); onError(null) }}
           onKeyDown={e => {
-            if (e.key === 'Enter') { onAdd(value); setShowSuggestions(false) }
+            if (e.key === 'Enter') { attempt(value); setShowSuggestions(false) }
             if (e.key === 'Escape') setShowSuggestions(false)
           }}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
         />
-        <button className={styles.addBtn} onClick={() => { onAdd(value); setShowSuggestions(false) }}>+</button>
+        <button className={styles.addBtn} onClick={() => attempt(value)}>+</button>
       </div>
+      {error && <div className={styles.addError}>{error}</div>}
       {showSuggestions && filtered.length > 0 && (
         <div className={styles.suggestions}>
           {filtered.map(s => (
@@ -214,19 +177,17 @@ export default function OnboardingScreen() {
 
   const [step, setStep] = useState(prefill ? 1 : 0)
   const [name, setName] = useState(existingPrefs?.name || '')
-  const [spirits, setSpirits] = useState(existingPrefs?.spirits || {})
-  const [lovedFlavors, setLovedFlavors] = useState(new Set(existingPrefs?.lovedFlavors || []))
-  const [avoidedFlavors, setAvoidedFlavors] = useState(new Set(existingPrefs?.avoidedFlavors || []))
-  const [flagged, setFlagged] = useState(new Set(existingPrefs?.flagged || []))
   const [classics, setClassics] = useState(new Set(existingPrefs?.classics || []))
+  const [flagged, setFlagged] = useState(new Set(existingPrefs?.flagged || []))
   const [hardAvoids, setHardAvoids] = useState(new Set(existingPrefs?.hardAvoids || []))
 
-  const [customSpirit, setCustomSpirit] = useState('')
-  const [customFlagged, setCustomFlagged] = useState('')
-  const [customAvoid, setCustomAvoid] = useState('')
-  const [extraSpirits, setExtraSpirits] = useState([])
-  const [extraFlagged, setExtraFlagged] = useState([])
-  const [extraAvoids, setExtraAvoids] = useState([])
+  const [extraFlagged, setExtraFlagged] = useState(existingPrefs?.extraFlagged || [])
+  const [extraAvoids, setExtraAvoids] = useState(existingPrefs?.extraAvoids || [])
+
+  const [flaggedInput, setFlaggedInput] = useState('')
+  const [flaggedError, setFlaggedError] = useState(null)
+  const [avoidsInput, setAvoidsInput] = useState('')
+  const [avoidsError, setAvoidsError] = useState(null)
 
   const currentStep = STEPS[step]
   const totalSteps = STEPS.length - 1
@@ -236,17 +197,7 @@ export default function OnboardingScreen() {
     setTimeout(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0 }, 50)
   }
   function goNext() { if (step < STEPS.length - 1) { setStep(s => s + 1); scrollTop() } }
-  function goBack() { if (step > 0) { setStep(s => s - 1); scrollTop() } }
-
-  function toggleSpirit(id) {
-    setSpirits(prev => {
-      const next = { ...prev }
-      if (!next[id]) next[id] = 'love'
-      else if (next[id] === 'love') next[id] = 'avoid'
-      else delete next[id]
-      return next
-    })
-  }
+  function goBack() { if (step > (prefill ? 1 : 0)) { setStep(s => s - 1); scrollTop() } }
 
   function toggleSet(setter, id) {
     setter(prev => {
@@ -257,61 +208,55 @@ export default function OnboardingScreen() {
     })
   }
 
-  function toggleFlavor(id, type) {
-    if (type === 'love') {
-      setLovedFlavors(prev => {
-        const next = new Set(prev)
-        if (next.has(id)) { next.delete(id); return next }
-        next.add(id)
-        setAvoidedFlavors(p => { const n = new Set(p); n.delete(id); return n })
-        return next
-      })
-    } else {
-      setAvoidedFlavors(prev => {
-        const next = new Set(prev)
-        if (next.has(id)) { next.delete(id); return next }
-        next.add(id)
-        setLovedFlavors(p => { const n = new Set(p); n.delete(id); return n })
-        return next
-      })
-    }
+  function addCustomFlagged(val) {
+    const trimmed = val.trim()
+    const id = 'custom_' + trimmed.toLowerCase().replace(/\s+/g, '_')
+    setExtraFlagged(prev => [...prev, { id, label: trimmed }])
+    setFlagged(prev => { const n = new Set(prev); n.add(id); return n })
+    setFlaggedInput('')
   }
 
-  function addCustomEntry(val, setExtra, setValue) {
+  function addCustomAvoid(val) {
     const trimmed = val.trim()
-    if (!trimmed) return
     const id = 'custom_' + trimmed.toLowerCase().replace(/\s+/g, '_')
-    setExtra(prev => {
-      if (prev.find(x => x.id === id)) return prev
-      return [...prev, { id, label: trimmed }]
-    })
-    setValue('')
+    setExtraAvoids(prev => [...prev, { id, label: trimmed }])
+    setHardAvoids(prev => { const n = new Set(prev); n.add(id); return n })
+    setAvoidsInput('')
   }
+
+  const allFlaggedIds = useMemo(() => {
+    return new Set([...FLAGGED.map(f => f.id), ...extraFlagged.map(f => f.id)])
+  }, [extraFlagged])
+
+  const allAvoidIds = useMemo(() => {
+    return new Set([...AVOIDS.map(a => a.id), ...extraAvoids.map(a => a.id)])
+  }, [extraAvoids])
 
   function finish() {
     const displayName = name.trim() || (profileId === 'me' ? 'Me' : 'Partner')
     const preferences = {
       name: displayName,
-      spirits,
-      lovedFlavors: [...lovedFlavors],
-      avoidedFlavors: [...avoidedFlavors],
-      flagged: [...flagged],
       classics: [...classics],
+      flagged: [...flagged],
       hardAvoids: [...hardAvoids],
+      extraFlagged,
+      extraAvoids,
     }
 
-    const loved = [...lovedFlavors].join(', ')
-    const avoided = [...avoidedFlavors].join(', ')
-    const lovedSpirits = Object.entries(spirits).filter(([,v]) => v === 'love').map(([k]) => k).join(', ')
-    const avoidedSpirits = Object.entries(spirits).filter(([,v]) => v === 'avoid').map(([k]) => k).join(', ')
-    const flaggedList = [...flagged].join(', ')
+    const classicList = CLASSICS.filter(c => classics.has(c.id)).map(c => c.label).join(', ')
+    const flaggedList = [...flagged].map(id => {
+      const found = [...FLAGGED, ...extraFlagged].find(f => f.id === id)
+      return found?.label || id
+    }).join(', ')
+    const avoidList = [...hardAvoids].map(id => {
+      const found = [...AVOIDS, ...extraAvoids].find(a => a.id === id)
+      return found?.label || id
+    }).join(', ')
 
     const fingerprint = [
-      loved && `Loves: ${loved}`,
-      avoided && `Avoids: ${avoided}`,
-      lovedSpirits && `Preferred spirits: ${lovedSpirits}`,
-      avoidedSpirits && `Avoided spirits: ${avoidedSpirits}`,
+      classicList && `Loves these classics: ${classicList}`,
       flaggedList && `Flag these ingredients: ${flaggedList}`,
+      avoidList && `Hard avoids: ${avoidList}`,
       `Based on onboarding. Confidence: low — no ratings yet.`,
     ].filter(Boolean).join('. ')
 
@@ -339,7 +284,7 @@ export default function OnboardingScreen() {
         {currentStep === 'name' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
-              <p className={styles.stepEyebrow}>Step 1 of 6</p>
+              <p className={styles.stepEyebrow}>Step 1 of 4</p>
               <h2 className={styles.stepTitle}>What's your name?</h2>
               <p className={styles.stepSub}>This is how you'll appear in the app.</p>
             </div>
@@ -358,106 +303,11 @@ export default function OnboardingScreen() {
           </div>
         )}
 
-        {/* ── Spirits ── */}
-        {currentStep === 'spirits' && (
-          <div className={styles.stepWrap}>
-            <div className={styles.stepHeader}>
-              <p className={styles.stepEyebrow}>Step 2 of 6</p>
-              <h2 className={styles.stepTitle}>Your spirits</h2>
-              <p className={styles.stepSub}>Tap once to love it. Tap twice to avoid it. Tap again to clear.</p>
-            </div>
-            <div className={styles.chipGrid}>
-              <AutoSuggestInput
-                value={customSpirit}
-                onChange={setCustomSpirit}
-                onAdd={val => addCustomEntry(val, setExtraSpirits, setCustomSpirit)}
-                placeholder="Add spirit…"
-                suggestions={ALL_INGREDIENTS}
-              />
-              {[...SPIRITS, ...extraSpirits].map(s => {
-                const state = spirits[s.id]
-                return (
-                  <button
-                    key={s.id}
-                    className={`${styles.chip} ${state === 'love' ? styles.chipLove : ''} ${state === 'avoid' ? styles.chipAvoid : ''}`}
-                    onClick={() => toggleSpirit(s.id)}
-                  >
-                    {state === 'love' && <span className={styles.chipIcon}>✓</span>}
-                    {state === 'avoid' && <span className={styles.chipIcon}>✕</span>}
-                    {s.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Flavors ── */}
-        {currentStep === 'flavors' && (
-          <div className={styles.stepWrap}>
-            <div className={styles.stepHeader}>
-              <p className={styles.stepEyebrow}>Step 3 of 6</p>
-              <h2 className={styles.stepTitle}>Flavor profile</h2>
-              <p className={styles.stepSub}>
-                <span className={styles.legendLove}>Green = love it.</span>
-                {'  '}
-                <span className={styles.legendAvoid}>Red = avoid it.</span>
-              </p>
-            </div>
-            <div className={styles.flavorGrid}>
-              {FLAVORS.map(f => {
-                const loved = lovedFlavors.has(f.id)
-                const avoided = avoidedFlavors.has(f.id)
-                return (
-                  <div key={f.id} className={styles.flavorCard}>
-                    <div className={styles.flavorLabel}>{f.label}</div>
-                    <div className={styles.flavorDesc}>{f.desc}</div>
-                    <div className={styles.flavorBtns}>
-                      <button className={`${styles.flavorBtn} ${loved ? styles.flavorBtnLove : ''}`} onClick={() => toggleFlavor(f.id, 'love')}>Love</button>
-                      <button className={`${styles.flavorBtn} ${avoided ? styles.flavorBtnAvoid : ''}`} onClick={() => toggleFlavor(f.id, 'avoid')}>Avoid</button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Flagged ── */}
-        {currentStep === 'flagged' && (
-          <div className={styles.stepWrap}>
-            <div className={styles.stepHeader}>
-              <p className={styles.stepEyebrow}>Step 4 of 6</p>
-              <h2 className={styles.stepTitle}>Flag these</h2>
-              <p className={styles.stepSub}>These get highlighted on any menu — not a hard filter, just a heads up.</p>
-            </div>
-            <div className={styles.chipGrid}>
-              <AutoSuggestInput
-                value={customFlagged}
-                onChange={setCustomFlagged}
-                onAdd={val => addCustomEntry(val, setExtraFlagged, setCustomFlagged)}
-                placeholder="Add ingredient…"
-                suggestions={ALL_INGREDIENTS}
-              />
-              {[...FLAGGED, ...extraFlagged].map(f => (
-                <button
-                  key={f.id}
-                  className={`${styles.chip} ${flagged.has(f.id) ? styles.chipFlag : ''}`}
-                  onClick={() => toggleSet(setFlagged, f.id)}
-                >
-                  {flagged.has(f.id) && <span className={styles.chipIcon}>⚑</span>}
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* ── Classics ── */}
         {currentStep === 'classics' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
-              <p className={styles.stepEyebrow}>Step 5 of 6</p>
+              <p className={styles.stepEyebrow}>{prefill ? 'Step 1 of 3' : 'Step 2 of 4'}</p>
               <h2 className={styles.stepTitle}>Cocktails you love</h2>
               <p className={styles.stepSub}>Tap any you'd order without thinking twice.</p>
             </div>
@@ -477,29 +327,63 @@ export default function OnboardingScreen() {
           </div>
         )}
 
+        {/* ── Flagged ── */}
+        {currentStep === 'flagged' && (
+          <div className={styles.stepWrap}>
+            <div className={styles.stepHeader}>
+              <p className={styles.stepEyebrow}>{prefill ? 'Step 2 of 3' : 'Step 3 of 4'}</p>
+              <h2 className={styles.stepTitle}>Flag these</h2>
+              <p className={styles.stepSub}>These get highlighted on any menu — not a hard filter, just a heads up.</p>
+            </div>
+            <AutoSuggestInput
+              value={flaggedInput}
+              onChange={setFlaggedInput}
+              onAdd={addCustomFlagged}
+              placeholder="Add ingredient…"
+              existingIds={allFlaggedIds}
+              error={flaggedError}
+              onError={setFlaggedError}
+            />
+            <div className={styles.chipGrid}>
+              {[...FLAGGED, ...extraFlagged].map(f => (
+                <button
+                  key={f.id}
+                  className={`${styles.chip} ${flagged.has(f.id) ? styles.chipOn : ''}`}
+                  onClick={() => toggleSet(setFlagged, f.id)}
+                >
+                  <span className={`${styles.chipDot} ${flagged.has(f.id) ? styles.chipDotOn : ''}`}>⚑</span>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── Avoids ── */}
         {currentStep === 'avoids' && (
           <div className={styles.stepWrap}>
             <div className={styles.stepHeader}>
-              <p className={styles.stepEyebrow}>Step 6 of 6</p>
+              <p className={styles.stepEyebrow}>{prefill ? 'Step 3 of 3' : 'Step 4 of 4'}</p>
               <h2 className={styles.stepTitle}>Hard avoids</h2>
               <p className={styles.stepSub}>These tank a score immediately, no matter what else is in the drink.</p>
             </div>
+            <AutoSuggestInput
+              value={avoidsInput}
+              onChange={setAvoidsInput}
+              onAdd={addCustomAvoid}
+              placeholder="Add avoid…"
+              existingIds={allAvoidIds}
+              error={avoidsError}
+              onError={setAvoidsError}
+            />
             <div className={styles.chipGrid}>
-              <AutoSuggestInput
-                value={customAvoid}
-                onChange={setCustomAvoid}
-                onAdd={val => addCustomEntry(val, setExtraAvoids, setCustomAvoid)}
-                placeholder="Add avoid…"
-                suggestions={ALL_INGREDIENTS}
-              />
               {[...AVOIDS, ...extraAvoids].map(a => (
                 <button
                   key={a.id}
                   className={`${styles.chip} ${hardAvoids.has(a.id) ? styles.chipAvoid : ''}`}
                   onClick={() => toggleSet(setHardAvoids, a.id)}
                 >
-                  {hardAvoids.has(a.id) && <span className={styles.chipIcon}>✕</span>}
+                  <span className={`${styles.chipDot} ${hardAvoids.has(a.id) ? styles.chipDotAvoid : ''}`}>✕</span>
                   {a.label}
                 </button>
               ))}
