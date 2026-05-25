@@ -4,6 +4,24 @@ import { useProfile } from '../App.jsx'
 import { useProfiles } from '../hooks/useProfiles.js'
 import styles from './ResultsScreen.module.css'
 
+const MOODS = [
+  { id: 'surprise', label: 'Surprise Me' },
+  { id: 'rich', label: 'Rich & Spirit-Forward' },
+  { id: 'light', label: 'Light & Refreshing' },
+]
+
+const SPIRIT_FORWARD_SIGNALS = [
+  'spirit-forward', 'spirit forward', 'stirred', 'whiskey', 'bourbon', 'rye',
+  'mezcal', 'scotch', 'cognac', 'aged rum', 'rich', 'amaro', 'bitter',
+  'herbal', 'smoky', 'boozy', 'strong', 'neat', 'robust',
+]
+
+const LIGHT_SIGNALS = [
+  'refreshing', 'citrus', 'light', 'effervescent', 'sparkling', 'spritz',
+  'soda', 'low abv', 'bright', 'bubbly', 'tart', 'crisp', 'floral',
+  'fruity', 'delicate', 'easy', 'sessionable',
+]
+
 export default function ResultsScreen() {
   const { visitId } = useParams()
   const navigate = useNavigate()
@@ -13,6 +31,7 @@ export default function ResultsScreen() {
   const [visit, setVisit] = useState(null)
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState(null) // 'me' | 'partner' | 'us'
+  const [mood, setMood] = useState('surprise') // 'surprise' | 'rich' | 'light'
   const [expandedId, setExpandedId] = useState(null)
   const [ingredientPopup, setIngredientPopup] = useState(null) // { name, flavorDesc }
 
@@ -84,10 +103,26 @@ export default function ResultsScreen() {
     return cocktail.explanation1 // us view shows primary profile explanation
   }
 
-  // Sort: high first, then medium, then low
+  // How strongly does this cocktail match the selected mood?
+  // Returns a number — higher means stronger match.
+  // Only used as a tiebreaker within the same score tier.
+  function moodBoost(cocktail) {
+    if (mood === 'surprise') return 0
+    const text = [
+      cocktail.flavorSummary || '',
+      ...(cocktail.ingredients || []).map(i => i.flavorDesc || ''),
+    ].join(' ').toLowerCase()
+    const signals = mood === 'rich' ? SPIRIT_FORWARD_SIGNALS : LIGHT_SIGNALS
+    return signals.filter(s => text.includes(s)).length
+  }
+
+  // Sort: score tier first (high → medium → low),
+  // then within each tier boost by mood signal count
   const scoreOrder = { high: 0, medium: 1, low: 2 }
   const sorted = [...(visit.cocktails || [])].sort((a, b) => {
-    return (scoreOrder[getScore(a)] ?? 1) - (scoreOrder[getScore(b)] ?? 1)
+    const scoreDiff = (scoreOrder[getScore(a)] ?? 1) - (scoreOrder[getScore(b)] ?? 1)
+    if (scoreDiff !== 0) return scoreDiff
+    return moodBoost(b) - moodBoost(a)
   })
 
   return (
@@ -99,6 +134,19 @@ export default function ResultsScreen() {
           <button className={styles.backBtn} onClick={() => navigate('/scan')}>←</button>
           <div className={styles.barName}>{visit.barName}</div>
           <div style={{ width: 32 }} />
+        </div>
+
+        {/* Mood toggle */}
+        <div className={styles.moodRow}>
+          {MOODS.map(m => (
+            <button
+              key={m.id}
+              className={`${styles.moodBtn} ${mood === m.id ? styles.moodBtnOn : ''}`}
+              onClick={() => setMood(m.id)}
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
 
         {/* You / Partner / Us toggle */}

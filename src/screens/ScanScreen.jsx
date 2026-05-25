@@ -4,12 +4,6 @@ import { useProfile } from '../App.jsx'
 import { useProfiles } from '../hooks/useProfiles.js'
 import styles from './ScanScreen.module.css'
 
-const MOODS = [
-  { id: 'boozy', label: 'Boozy & Spirit-Forward' },
-  { id: 'light', label: 'Light & Refreshing' },
-  { id: 'surprise', label: 'Surprise Me' },
-]
-
 const STATUS_MESSAGES = [
   'Reading the menu…',
   'Translating flavors…',
@@ -45,7 +39,6 @@ export default function ScanScreen() {
   const { activeProfile } = useProfile()
   const { getProfile } = useProfiles()
 
-  const [mood, setMood] = useState('boozy')
   const [photos, setPhotos] = useState([])
   const [status, setStatus] = useState('idle')
   const [statusMsg, setStatusMsg] = useState(0)
@@ -106,7 +99,7 @@ export default function ScanScreen() {
 
   async function translate() {
     if (!photos.length) return
-    const resolvedProfile = activeProfile || "me"
+    const resolvedProfile = activeProfile || 'me'
     const profile = getProfile(resolvedProfile)
     if (!profile) return
 
@@ -122,7 +115,6 @@ export default function ScanScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           photos: photos.map(p => ({ base64: p.base64, mediaType: p.mediaType })),
-          mood,
           profileId: resolvedProfile,
           fingerprint: profile.fingerprint,
           partnerFingerprint: getProfile(resolvedProfile === 'me' ? 'partner' : 'me')?.fingerprint || null,
@@ -154,17 +146,6 @@ export default function ScanScreen() {
 
   return (
     <div className={styles.screen}>
-      <div className={styles.moodRow}>
-        {MOODS.map(m => (
-          <button
-            key={m.id}
-            className={`${styles.moodBtn} ${mood === m.id ? styles.moodBtnOn : ''}`}
-            onClick={() => setMood(m.id)}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
 
       <div className={styles.main}>
         {status === 'loading' ? (

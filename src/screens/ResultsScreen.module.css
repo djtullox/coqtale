@@ -34,6 +34,37 @@
   flex: 1;
 }
 
+/* ── Mood toggle ── */
+.moodRow {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0 0 0.75rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.moodRow::-webkit-scrollbar { display: none; }
+.moodBtn {
+  flex-shrink: 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--smoke);
+  background: var(--burgundy-mid);
+  border: 1px solid var(--burgundy-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.moodBtnOn {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  background: rgba(201, 169, 110, 0.1);
+}
+
 /* ── View toggle ── */
 .viewToggle {
   display: flex;
