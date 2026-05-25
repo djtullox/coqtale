@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { photos, profileId, fingerprint, partnerFingerprint } = req.body
+  const { photos, profileId, profileName, fingerprint, partnerFingerprint, partnerName } = req.body
 
   if (!photos?.length) {
     return res.status(400).json({ error: 'No photos provided' })
@@ -21,10 +21,10 @@ export default async function handler(req, res) {
 
   const prompt = `You are a cocktail sommelier reading a menu and scoring drinks for a guest. Be fast and concise.
 
-Profile 1 (${profileId}):
+Profile for ${profileName || profileId}:
 ${fingerprint || 'No profile data yet — score neutrally.'}
 
-${partnerFingerprint ? `Profile 2 (partner):\n${partnerFingerprint}` : 'Profile 2: not set — score neutrally.'}
+${partnerFingerprint ? `Profile for ${partnerName || 'Partner'}:\\n${partnerFingerprint}` : 'Second profile: not set — score neutrally.'}
 
 ONLY process cocktails. Skip entirely: beer, wine, spirits lists, non-alcoholic drinks, food, and any section that is not a cocktail menu.
 
