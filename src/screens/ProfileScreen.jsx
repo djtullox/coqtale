@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useProfiles } from '../hooks/useProfiles.js'
 import styles from './ProfileScreen.module.css'
 
@@ -29,14 +29,17 @@ export default function ProfileScreen() {
   const { profileId } = useParams()
   const { getProfile } = useProfiles()
   const navigate = useNavigate()
+  const location = useLocation()
   const profile = getProfile(profileId)
 
   const [visits, setVisits] = useState([])
   const [loading, setLoading] = useState(true)
   const [showRetune, setShowRetune] = useState(false)
 
+  // Re-fetch every time this screen is navigated to
   useEffect(() => {
     async function loadVisits() {
+      setLoading(true)
       try {
         const res = await fetch('/api/visits', { cache: 'no-store' })
         if (res.ok) {
@@ -50,7 +53,7 @@ export default function ProfileScreen() {
       }
     }
     loadVisits()
-  }, [])
+  }, [location.pathname])
 
   const returnTo = `/profile/${profileId}`
   const now = Date.now()
