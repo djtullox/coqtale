@@ -95,24 +95,11 @@ Scoring rules:
     return res.status(422).json({ error: "No cocktails found. Make sure you're photographing a cocktail menu." })
   }
 
-  // ── Build visitId and response payload ───────────────────────────────────
+  // ── Build visitId ─────────────────────────────────────────────────────────
 
   const visitId = crypto.randomUUID()
 
-  const responsePayload = {
-    visitId,
-    barName: result.barName || 'Unknown Bar',
-    profileId,
-    cocktails: result.cocktails,
-    unreadableCount: result.unreadableCount || 0,
-  }
-
-  // ── Respond to client immediately ────────────────────────────────────────
-  // Turso writes happen after — client is unblocked as soon as Claude finishes
-
-  res.status(200).json(responsePayload)
-
-  // ── Persist to Turso in background (batched) ─────────────────────────────
+  // ── Persist to Turso before responding ───────────────────────────────────
 
   try {
     const db = getDb()
@@ -158,11 +145,20 @@ Scoring rules:
       })
     }
 
-    // Execute all inserts in one batch
     await db.batch(statements, 'write')
 
   } catch (err) {
-    console.error('DB write error (background):', err)
-    // Non-fatal — client already has their results via sessionStorage
+    // DB write failed — log it but still return results to the client
+    console.error('DB write error:', err)
   }
+
+  // ── Respond to client ─────────────────────────────────────────────────────
+
+  return res.status(200).json({
+    visitId,
+    barName: result.barName || 'Unknown Bar',
+    profileId,
+    cocktails: result.cocktails,
+    unreadableCount: result.unreadableCount || 0,
+  })
 }
