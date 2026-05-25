@@ -19,12 +19,17 @@ export default async function handler(req, res) {
     source: { type: 'base64', media_type: p.mediaType, data: p.base64 },
   }))
 
+  const profile1Name = profileName || profileId
+  const profile2Name = partnerName || 'Partner'
+
   const prompt = `You are a cocktail sommelier reading a menu and scoring drinks for a guest. Be fast and concise.
 
-Profile for ${profileName || profileId}:
+Profile for ${profile1Name}:
 ${fingerprint || 'No profile data yet — score neutrally.'}
 
-${partnerFingerprint ? `Profile for ${partnerName || 'Partner'}:\\n${partnerFingerprint}` : 'Second profile: not set — score neutrally.'}
+${partnerFingerprint
+  ? `Profile for ${profile2Name}:\n${partnerFingerprint}`
+  : `Second profile: not set — score neutrally.`}
 
 ONLY process cocktails. Skip entirely: beer, wine, spirits lists, non-alcoholic drinks, food, and any section that is not a cocktail menu.
 
@@ -44,9 +49,9 @@ Return ONLY a JSON object, no markdown, no preamble:
         { "name": "ingredient as written", "flavorDesc": "plain English taste description" }
       ],
       "score1": "high",
-      "explanation1": "One sentence why this matches or doesn't match Profile 1",
+      "explanation1": "One sentence why this matches or doesn't match ${profile1Name}",
       "score2": "high",
-      "explanation2": "One sentence why for Profile 2",
+      "explanation2": "One sentence why this matches or doesn't match ${profile2Name}",
       "scoreUs": "high",
       "flaggedIngredients": [],
       "readable": true
@@ -61,7 +66,8 @@ Scoring rules:
 - Set readable:false only if you truly cannot make out a cocktail name or ingredients
 - Count unreadable cocktails in unreadableCount but do not include them in the cocktails array
 - Never use brand names in flavorSummary
-- Keep explanations short — one sentence maximum`
+- Keep explanations short — one sentence maximum
+- Always refer to profiles by name (${profile1Name}, ${profile2Name}) not as "Profile 1" or "Profile 2"`
 
   let result
   try {
@@ -111,7 +117,6 @@ Scoring rules:
   try {
     const db = getDb()
 
-    // Build all statements as a single batched transaction
     const statements = [
       {
         sql: `INSERT INTO visits (id, bar_name, scanned_at, created_by) VALUES (?, ?, ?, ?)`,
@@ -153,7 +158,7 @@ Scoring rules:
       })
     }
 
-    // Execute all inserts in one batch — far fewer round trips than sequential awaits
+    // Execute all inserts in one batch
     await db.batch(statements, 'write')
 
   } catch (err) {
