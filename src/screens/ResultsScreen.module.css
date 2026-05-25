@@ -187,7 +187,7 @@
 .ingredientsLabel {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: var(--cream-dim);
+  color: var(--smoke);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
@@ -216,7 +216,7 @@
   margin-top: 0.6rem;
   font-family: var(--font-mono);
   font-size: 0.68rem;
-  color: var(--burgundy-light);
+  color: var(--smoke);
   text-align: right;
   letter-spacing: 0.04em;
 }
