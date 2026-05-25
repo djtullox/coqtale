@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useProfile } from '../App.jsx'
 import styles from './AppShell.module.css'
 
@@ -8,8 +8,10 @@ const THREE_HOURS_MS = 3 * 60 * 60 * 1000
 export default function AppShell() {
   const { activeProfile } = useProfile()
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeVisit, setActiveVisit] = useState(null)
 
+  // Re-check on every route change so Tonight appears immediately after a scan
   useEffect(() => {
     async function checkActiveVisit() {
       try {
@@ -24,7 +26,7 @@ export default function AppShell() {
       }
     }
     checkActiveVisit()
-  }, [])
+  }, [location.pathname])
 
   return (
     <div className={styles.shell}>
