@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { photos, mood, profileId, fingerprint, partnerFingerprint } = req.body
+  const { photos, profileId, fingerprint, partnerFingerprint } = req.body
 
   if (!photos?.length) {
     return res.status(400).json({ error: 'No photos provided' })
@@ -19,15 +19,7 @@ export default async function handler(req, res) {
     source: { type: 'base64', media_type: p.mediaType, data: p.base64 },
   }))
 
-  const moodDesc = {
-    boozy: 'boozy and spirit-forward — strong, stirred or shaken, not diluted or light',
-    light: 'light and refreshing — lower ABV, citrus-forward, effervescent, or easy-drinking',
-    surprise: 'open to anything — mood is neutral, just find the best match overall',
-  }[mood] || 'open to anything'
-
   const prompt = `You are a cocktail sommelier reading a menu and scoring drinks for a guest. Be fast and concise.
-
-Mood tonight: ${moodDesc}
 
 Profile 1 (${profileId}):
 ${fingerprint || 'No profile data yet — score neutrally.'}
@@ -105,7 +97,6 @@ Scoring rules:
     visitId,
     barName: result.barName || 'Unknown Bar',
     profileId,
-    mood,
     cocktails: result.cocktails,
     unreadableCount: result.unreadableCount || 0,
   }
