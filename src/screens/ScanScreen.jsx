@@ -109,11 +109,11 @@ export default function ScanScreen() {
 		setError(null)
 		startStatusCycle()
 		
+		const partnerProfile = getProfile(resolvedProfile === 'me' ? 'partner' : 'me')
 		try {
 			const response = await fetch('/api/scan', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				const partnerProfile = getProfile(resolvedProfile === 'me' ? 'partner' : 'me')
 				body: JSON.stringify({
 					photos: photos.map(p => ({ base64: p.base64, mediaType: p.mediaType })),
 					profileId: resolvedProfile,
