@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useProfiles } from '../hooks/useProfiles.js'
 import styles from './OnboardingScreen.module.css'
 
@@ -203,18 +203,23 @@ function AutoSuggestInput({ value, onChange, onAdd, placeholder, suggestions }) 
 
 export default function OnboardingScreen() {
   const { profileId } = useParams()
-  const { updateProfile } = useProfiles()
+  const { updateProfile, getProfile } = useProfiles()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const scrollRef = useRef(null)
 
-  const [step, setStep] = useState(0)
-  const [name, setName] = useState('')
-  const [spirits, setSpirits] = useState({})
-  const [lovedFlavors, setLovedFlavors] = useState(new Set())
-  const [avoidedFlavors, setAvoidedFlavors] = useState(new Set())
-  const [flagged, setFlagged] = useState(new Set())
-  const [classics, setClassics] = useState(new Set())
-  const [hardAvoids, setHardAvoids] = useState(new Set())
+  const returnTo = searchParams.get('returnTo') || null
+  const prefill = searchParams.get('prefill') === 'true'
+  const existingPrefs = prefill ? getProfile(profileId)?.preferences : null
+
+  const [step, setStep] = useState(prefill ? 1 : 0)
+  const [name, setName] = useState(existingPrefs?.name || '')
+  const [spirits, setSpirits] = useState(existingPrefs?.spirits || {})
+  const [lovedFlavors, setLovedFlavors] = useState(new Set(existingPrefs?.lovedFlavors || []))
+  const [avoidedFlavors, setAvoidedFlavors] = useState(new Set(existingPrefs?.avoidedFlavors || []))
+  const [flagged, setFlagged] = useState(new Set(existingPrefs?.flagged || []))
+  const [classics, setClassics] = useState(new Set(existingPrefs?.classics || []))
+  const [hardAvoids, setHardAvoids] = useState(new Set(existingPrefs?.hardAvoids || []))
 
   const [customSpirit, setCustomSpirit] = useState('')
   const [customFlagged, setCustomFlagged] = useState('')
@@ -317,7 +322,7 @@ export default function OnboardingScreen() {
       fingerprint,
     })
 
-    navigate('/scan')
+    navigate(returnTo || '/scan')
   }
 
   return (
@@ -523,7 +528,7 @@ export default function OnboardingScreen() {
 
       {currentStep !== 'done' && (
         <div className={styles.bottomNav}>
-          {step > 0
+          {step > (prefill ? 1 : 0)
             ? <button className={styles.backBtn} onClick={goBack}>← Back</button>
             : <div />
           }

@@ -33,6 +33,7 @@ export default function ProfileScreen() {
 
   const [visits, setVisits] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showRetune, setShowRetune] = useState(false)
 
   useEffect(() => {
     async function loadVisits() {
@@ -51,6 +52,7 @@ export default function ProfileScreen() {
     loadVisits()
   }, [])
 
+  const returnTo = `/profile/${profileId}`
   const now = Date.now()
 
   return (
@@ -70,6 +72,14 @@ export default function ProfileScreen() {
         ) : (
           <p className={styles.empty}>No profile data yet.</p>
         )}
+      </div>
+
+      {/* Retune */}
+      <div className={styles.section}>
+        <div className={styles.sectionLabel}>Preferences</div>
+        <button className={styles.retuneBtn} onClick={() => setShowRetune(true)}>
+          Retune profile
+        </button>
       </div>
 
       {/* Visit History */}
@@ -111,6 +121,32 @@ export default function ProfileScreen() {
           </div>
         )}
       </div>
+
+      {/* Retune action sheet */}
+      {showRetune && (
+        <div className={styles.sheetOverlay} onClick={() => setShowRetune(false)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.sheetTitle}>Retune profile</div>
+            <button
+              className={styles.sheetOption}
+              onClick={() => navigate(`/onboarding/${profileId}?returnTo=${encodeURIComponent(returnTo)}`)}
+            >
+              <div className={styles.sheetOptionLabel}>Start fresh</div>
+              <div className={styles.sheetOptionDesc}>Re-run the full wizard from scratch</div>
+            </button>
+            <button
+              className={styles.sheetOption}
+              onClick={() => navigate(`/onboarding/${profileId}?returnTo=${encodeURIComponent(returnTo)}&prefill=true`)}
+            >
+              <div className={styles.sheetOptionLabel}>Adjust preferences</div>
+              <div className={styles.sheetOptionDesc}>Edit your existing answers</div>
+            </button>
+            <button className={styles.sheetCancel} onClick={() => setShowRetune(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   )

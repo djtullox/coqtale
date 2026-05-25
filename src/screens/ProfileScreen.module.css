@@ -116,3 +116,94 @@
   font-size: 0.72rem;
   color: var(--smoke);
 }
+
+/* ── Retune button ── */
+.retuneBtn {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--gold);
+  background: none;
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: border-color 0.15s;
+}
+
+.retuneBtn:active {
+  border-color: var(--gold-dim);
+}
+
+/* ── Retune action sheet ── */
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  width: 100%;
+  background: var(--burgundy-mid);
+  border-top: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 1.25rem 1.25rem calc(var(--safe-bottom) + 1.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sheetTitle {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--smoke);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.sheetOption {
+  width: 100%;
+  text-align: left;
+  background: var(--burgundy);
+  border: 1px solid var(--burgundy-light);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.sheetOption:active {
+  border-color: var(--gold-dim);
+}
+
+.sheetOptionLabel {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: var(--cream);
+  margin-bottom: 0.2rem;
+}
+
+.sheetOptionDesc {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--smoke);
+  letter-spacing: 0.03em;
+}
+
+.sheetCancel {
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--smoke);
+  letter-spacing: 0.05em;
+  padding: 0.75rem;
+  cursor: pointer;
+  margin-top: 0.25rem;
+}
